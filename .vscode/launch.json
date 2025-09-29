@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Inventory service",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "InventoryServiceEntry:app",
+        "--reload",
+        "--port", "8000"
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      "cwd": "/home/eimantas/git/KitchenServices/Inventory/"
+    },
+    {
+      "name": "Kitchen service",
+      "type": "debugpy",
+      "request": "launch",
+      //"program": "${workspaceFolder}/.venv/bin/pytest",
+      "program": "${workspaceFolder}/Kitchen/KitchenServiceEntry.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Waitress service",
+      "type": "debugpy",
+      "request": "launch",
+      //"program": "${workspaceFolder}/.venv/bin/pytest",
+      "program": "${workspaceFolder}/Waitress/WaitressServiceEntry.py",
+      "console": "integratedTerminal"
+    }
+  ]
+}
