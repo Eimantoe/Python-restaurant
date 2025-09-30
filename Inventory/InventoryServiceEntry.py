@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import sys
 import os
 
@@ -10,14 +11,21 @@ from Shared.config import settings
 
 import time
 
-if settings.debug_mode:
-    print("InventoryServiceEntry loaded")
-
-#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 app = FastAPI(title="Kitchen inventory service")
 
 inventory_service = InventoryServiceLogic()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    if settings.debug_mode:
+        print("Inventory service starting up...")
+
+    yield
+
+    if settings.debug_mode:
+        print("Inventory service shutting down...")
 
 @app.middleware("http")
 async def add_process_time_header(request, call_next):

@@ -43,5 +43,15 @@
       "justMyCode": false,
       "cwd": "/home/eimantas/git/KitchenServices/Waitress/"
     }
+  ],
+  "compounds": [
+    {
+      "name": "All services",
+      "configurations": [
+        "Inventory service",
+        "Kitchen service",
+        "Waitress service"
+      ]
+    }
   ]
 }

@@ -19,8 +19,6 @@ from Shared.config import settings
 
 from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult
 
-#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 kitchen_service_logic = KitchenServiceLogic()
 
 @asynccontextmanager

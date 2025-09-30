@@ -2,10 +2,7 @@ from typing import Optional
 import redis
 from Events.Events import BaseEvent
 from Waitress.WaitressServiceModel import Menu
-from Shared.config import Settings
-
-if Settings.debug_mode:
-    print("Redis service loaded")
+from Shared.config import settings
 
 class RedisService:
 
@@ -35,7 +32,7 @@ class RedisService:
     def publish_event(self, stream: str, base_event):
         event_data = base_event.to_redis()
         self.client.xadd(stream, event_data) # type: ignore
-        if Settings.debug_mode:
+        if settings.debug_mode:
             print(f"Event added to Redis stream '{stream}': {event_data}")
 
     def consume_event(self, stream: str, last_id: str = '0-0'):
@@ -45,28 +42,28 @@ class RedisService:
             for message_id, message_data in messages_list:
                 return message_id, message_data
         else:
-            if Settings.debug_mode:
+            if settings.debug_mode:
                 print(f"No new messages in '{stream}' stream")
 
     def set_menu_cache(self, menu: Menu) -> None:
         self.client.set(self.MENU_CACHE_KEY, menu.model_dump_json(), ex=self.DEFAULT_TTL_SECONDS)
-        if Settings.debug_mode:
+        if settings.debug_mode:
             print(f"Menu items cached under key '{self.MENU_CACHE_KEY}'")
 
     def get_menu_cache(self) -> Optional[Menu]:
         cached_menu = self.client.get(self.MENU_CACHE_KEY)
 
-        if not cached_menu and Settings.debug_mode:
+        if not cached_menu and settings.debug_mode:
             print(f"Menu items fetched from cache under key '{self.MENU_CACHE_KEY}': None")
             return None
         
-        if Settings.debug_mode:
+        if settings.debug_mode:
             print(f"Menu items fetched from cache under key '{self.MENU_CACHE_KEY}': {cached_menu}")
 
         try:
             return Menu.model_validate_json(cached_menu) # type: ignore
         except Exception as e:
-            if Settings.debug_mode:
+            if settings.debug_mode:
                 print(f"Error validating cached menu data: {e}")
             return None
         

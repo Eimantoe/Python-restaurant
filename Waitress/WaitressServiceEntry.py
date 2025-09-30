@@ -11,14 +11,10 @@ from Shared.RedisService import RedisService
 from Shared.config import Settings
 import time
 
-if Settings.debug_mode:
-    print("WaitressServiceEntry loaded")
-
 from fastapi import FastAPI, HTTPException
 from Waitress.WaitressServiceLogic import WaitressServiceLogic
 from Shared.RedisService import redis_service
 
-#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 service_logic = WaitressServiceLogic()
 
 @asynccontextmanager

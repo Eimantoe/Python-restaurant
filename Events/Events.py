@@ -2,11 +2,11 @@ import json
 from typing_extensions import Literal
 from pydantic import BaseModel
 from typing import List, Dict
-from Shared.RedisService import redis_service
+#from Shared.RedisService import redis_service
 
 class BaseEvent(BaseModel):
 
-    order_id: int = redis_service.generate_new_id("event_id_counter")
+    order_id: int = 1#redis_service.generate_new_id("event_id_counter")
     table_no: str
 
     def to_redis(self) -> dict[str, str]:
