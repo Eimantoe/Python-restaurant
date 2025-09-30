@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import time
 
 from contextlib import asynccontextmanager
@@ -14,6 +19,7 @@ from Shared.config import settings
 
 from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult
 
+#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 kitchen_service_logic = KitchenServiceLogic()
 

@@ -19,17 +19,29 @@
       "name": "Kitchen service",
       "type": "debugpy",
       "request": "launch",
-      //"program": "${workspaceFolder}/.venv/bin/pytest",
-      "program": "${workspaceFolder}/Kitchen/KitchenServiceEntry.py",
-      "console": "integratedTerminal"
+      "module": "uvicorn",
+      "args": [
+        "KitchenServiceEntry:app",
+        "--reload",
+        "--port", "7000"
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      "cwd": "/home/eimantas/git/KitchenServices/Kitchen/"
     },
     {
       "name": "Waitress service",
       "type": "debugpy",
       "request": "launch",
-      //"program": "${workspaceFolder}/.venv/bin/pytest",
-      "program": "${workspaceFolder}/Waitress/WaitressServiceEntry.py",
-      "console": "integratedTerminal"
+      "module": "uvicorn",
+      "args": [
+        "WaitressServiceEntry:app",
+        "--reload",
+        "--port", "6000"
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      "cwd": "/home/eimantas/git/KitchenServices/Waitress/"
     }
   ]
 }

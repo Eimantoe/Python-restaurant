@@ -1,4 +1,11 @@
+
+
 from contextlib import asynccontextmanager
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from Waitress.WaitressServiceModel import Menu
 from Shared.RedisService import RedisService
 from Shared.config import Settings
@@ -11,6 +18,7 @@ from fastapi import FastAPI, HTTPException
 from Waitress.WaitressServiceLogic import WaitressServiceLogic
 from Shared.RedisService import redis_service
 
+#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 service_logic = WaitressServiceLogic()
 
 @asynccontextmanager
@@ -41,15 +49,15 @@ async def show_menu():
     menu_items = redis_service.get_menu_cache()
 
     if menu_items:
-        return Menu.model_validate_json(menu_items) # type: ignore
+        return menu_items 
     else:
         await service_logic.get_menu()
         menu_items = redis_service.get_menu_cache()
         if menu_items:
-            return Menu.model_validate_json(menu_items) # type: ignore
+            return menu_items
         else:
-            raise HTTPException(status_code=404, detail="Menu items not found")
-        
+            return []
+
 @app.post("/place-order")
 async def place_order(orders: list[dict[str, int]]):
     if Settings.debug_mode:
