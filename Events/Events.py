@@ -7,7 +7,7 @@ from typing import List, Dict
 class BaseEvent(BaseModel):
 
     order_id: int = 1#redis_service.generate_new_id("event_id_counter")
-    table_no: str
+    table_no: int
 
     def to_redis(self) -> dict[str, str]:
         data = self.model_dump()

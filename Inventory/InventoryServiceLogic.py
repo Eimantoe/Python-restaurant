@@ -1,9 +1,6 @@
-from InventoryServiceModel import CheckRecipeForIngredientsTask, CheckRecipeForIngredientsResult, ConsumeIngridientsTask, ConsumeIngridientsResult, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult, Menu, MenuItem
-import uuid
-
+from .InventoryServiceModel import CheckRecipeForIngredientsTask, CheckRecipeForIngredientsResult, ConsumeIngridientsTask, ConsumeIngridientsResult, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult, Menu, MenuItem
 from Shared.config import settings
-
-from Repository.InventoryRepository import InventoryRepository
+from .Repository.InventoryRepository import InventoryRepository
 
 class InventoryServiceLogic:
 
@@ -86,9 +83,8 @@ class InventoryServiceLogic:
     
     def get_menu_items(self) -> Menu:
 
-        menu = self.inventory_repository.get_menu_items()
+        menu_result = self.inventory_repository.get_menu_items()
 
-        return Menu(items=[MenuItem(**item) for item in menu])
+        menu = Menu(items=[MenuItem(name=item.get("Name"), description=item.get("Description")) for item in menu_result]) # type: ignore
 
-if settings.debug_mode:
-    print("InventoryServiceLogic loaded")
+        return menu

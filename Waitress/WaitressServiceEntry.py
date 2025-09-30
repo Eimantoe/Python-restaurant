@@ -1,14 +1,16 @@
 
 
 from contextlib import asynccontextmanager
+from Events.Events import OrderPlaced
+from .WaitressServiceModel import PlaceOrderRequest, PlaceOrderRequestItem, PlaceOrderResponse
+
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from Waitress.WaitressServiceModel import Menu
-from Shared.RedisService import RedisService
-from Shared.config import Settings
+from Shared.config import settings
 import time
 
 from fastapi import FastAPI, HTTPException
@@ -20,14 +22,14 @@ service_logic = WaitressServiceLogic()
 @asynccontextmanager
 async def lifespan(app: FastAPI):   
     
-    if Settings.debug_mode:
+    if settings.debug_mode:
         print("Waitress service starting up...")
 
     await service_logic.get_menu()
 
     yield
 
-    if Settings.debug_mode:
+    if settings.debug_mode:
         print("Waitress service shutting down...")
 
 app = FastAPI(title="Waitress service", lifespan=lifespan)
@@ -52,16 +54,18 @@ async def show_menu():
         if menu_items:
             return menu_items
         else:
-            return []
+            return Menu(items=[])
 
-@app.post("/place-order")
-async def place_order(orders: list[dict[str, int]]):
-    if Settings.debug_mode:
+@app.post("/place-order", response_model=PlaceOrderResponse)
+async def place_order(orders: PlaceOrderRequest):
+    if settings.debug_mode:
         print(f"Received orders: {orders}")
 
-    order_id = await service_logic.place_order(orders)
+    orderPlacedEvent = OrderPlaced(table_no=orders.table_no, order_id=redis_service.generate_new_id("event_id_counter"), items=[item.model_dump() for item in orders.items])
 
-    return {"order_id": order_id}
+    await service_logic.place_order(orderPlacedEvent)
+
+    return PlaceOrderResponse(order_id=orderPlacedEvent.order_id)
 
 @app.post("/consume-kitchen-order")
 async def consume_kitchen_order(last_id: str = '0-0'):

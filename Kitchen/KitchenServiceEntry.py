@@ -6,17 +6,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
 
 from contextlib import asynccontextmanager
-
-import requests
-import redis
-
-from KitchenServiceLogic import KitchenServiceLogic
+from .KitchenServiceLogic import KitchenServiceLogic
 from Shared.RedisService import redis_service
 from fastapi import FastAPI, HTTPException
 
 from Events.Events import OrderPlaced, OrderCanceled, OrderReady
 from Shared.config import settings
-
 from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult
 
 kitchen_service_logic = KitchenServiceLogic()

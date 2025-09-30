@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from typing import Any, Dict, List
 
@@ -5,10 +6,11 @@ from Shared.config import Settings
 
 class InventoryRepository:
 
-    db_path = "Repository/kitchen.db"
+    db_path = "./Inventory/Repository/kitchen.db"
     
     # Get a connection to the SQLite database
     def get_connection(self):
+        print(f'{os.getcwd()} @@@@@@@@@@@@@@@@@@@@@@@@')
         return sqlite3.connect(self.db_path)
     
     def get_menu_items(self) -> List[Dict[str, str]]:

@@ -7,13 +7,13 @@
       "request": "launch",
       "module": "uvicorn",
       "args": [
-        "InventoryServiceEntry:app",
+        "Inventory.InventoryServiceEntry:app",
         "--reload",
         "--port", "8000"
       ],
       "jinja": true,
       "justMyCode": false,
-      "cwd": "/home/eimantas/git/KitchenServices/Inventory/"
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Kitchen service",
@@ -21,13 +21,13 @@
       "request": "launch",
       "module": "uvicorn",
       "args": [
-        "KitchenServiceEntry:app",
+        "Kitchen.KitchenServiceEntry:app",
         "--reload",
         "--port", "7000"
       ],
       "jinja": true,
       "justMyCode": false,
-      "cwd": "/home/eimantas/git/KitchenServices/Kitchen/"
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Waitress service",
@@ -35,13 +35,13 @@
       "request": "launch",
       "module": "uvicorn",
       "args": [
-        "WaitressServiceEntry:app",
+        "Waitress.WaitressServiceEntry:app",
         "--reload",
         "--port", "6000"
       ],
       "jinja": true,
       "justMyCode": false,
-      "cwd": "/home/eimantas/git/KitchenServices/Waitress/"
+      "cwd": "${workspaceFolder}"
     }
   ],
   "compounds": [

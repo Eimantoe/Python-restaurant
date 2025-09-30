@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
-#from Shared.config import settings
 
 # This model is used to check if a recipe can be made with the available ingredients
 class CheckRecipeForIngredientsTask(BaseModel):
@@ -70,7 +69,3 @@ class MenuItem(BaseModel):
 
 class Menu(BaseModel):
     items: list[MenuItem]
-
-
-#if settings.debug_mode:
-#   print("InventoryServiceModel loaded")

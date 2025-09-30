@@ -1,3 +1,4 @@
+import asyncio
 import redis
 from Events.Events import OrderCanceled, OrderPlaced, OrderReady
 from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsResult, ConsumeRecipeIngridientsTask
@@ -10,7 +11,7 @@ import httpx
 class KitchenServiceLogic:
     
     def __init__(self):
-        self.last_order_id : str = "0-0"
+        self.last_order_id : str = redis_service.get_last_processed_id() or '0-0'
 
     async def consume_waitress_order_events(self):
         while True:
@@ -18,11 +19,13 @@ class KitchenServiceLogic:
                 message_id, message_data = redis_service.consume_waitress_order_event(self.last_order_id) or (None, None)
                 
                 if message_id is None or message_data is None:
-                    sleep(100)
+                    await asyncio.sleep(100)
                     continue
 
                 self.last_order_id = message_id # type: ignore
                 self.process_message(message_data)
+
+                redis_service.set_last_processed_id(self.last_order_id)
             except redis.ConnectionError as e:
                 print(f"Redis connection error: {e}")
             except Exception as e:
@@ -115,6 +118,6 @@ class KitchenServiceLogic:
                 print(f"Error consuming ingredients: {response.status_code}")
 
         # Simulate processing time
-        sleep(100)  
+        await asyncio.sleep(100)
 
         return result           
