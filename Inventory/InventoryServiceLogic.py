@@ -23,7 +23,7 @@ class InventoryServiceLogic:
             print(f"Checking if recipe '{task.recipe_name}' can be made with quantity {task.qty}")
 
         # Check if the recipe exists in the database
-        if not self.inventory_repository.get_recipe_ingridients_by_name(task.recipe_name):
+        if not await self.inventory_repository.get_recipe_ingridients_by_name(task.recipe_name):
             print(f"Recipe '{task.recipe_name}' not found in the database.")
             return CheckRecipeForIngredientsResult(
                 id=task.id,  # Generate a unique ID for the result
@@ -32,7 +32,7 @@ class InventoryServiceLogic:
             )
         
         # Check if all ingredients for the recipe are available in the required quantities
-        can_make = self.inventory_repository.check_ingridients_for_recipe(task.recipe_name, task.qty)
+        can_make = await self.inventory_repository.check_ingridients_for_recipe(task.recipe_name, task.qty)
 
         if not can_make:
             
@@ -61,7 +61,7 @@ class InventoryServiceLogic:
             print(f"Consuming ingredients for recipe '{task.ingridient_name}' with quantity {task.qty}")
 
         # Consume ingredients from the inventory
-        consumed = self.inventory_repository.consume_ingridient(task.ingridient_name, task.qty)
+        consumed = await self.inventory_repository.consume_ingridient(task.ingridient_name, task.qty)
 
         return ConsumeIngridientsResult(
             id=task.id,
@@ -75,7 +75,7 @@ class InventoryServiceLogic:
             print(f"Consuming ingredients for recipe '{task.recipe_name}' with quantity {task.qty}")
 
         # Consume ingredients for the recipe from the inventory
-        consumed = self.inventory_repository.consume_recipe_ingridients(task.recipe_name, task.qty)
+        consumed = await self.inventory_repository.consume_recipe_ingridients(task.recipe_name, task.qty)
 
         return ConsumeRecipeIngridientsResult(
             id=task.id,
@@ -85,7 +85,7 @@ class InventoryServiceLogic:
     
     async def get_menu_items(self) -> Menu:
 
-        menu_result = self.inventory_repository.get_menu_items()
+        menu_result = await self.inventory_repository.get_menu_items()
 
         menu = Menu(items=[MenuItem(name=item.get("Name"), description=item.get("Description")) for item in menu_result]) # type: ignore
 
