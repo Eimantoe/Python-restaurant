@@ -44,13 +44,13 @@ async def add_process_time_header(request, call_next):
 
 @app.get("/menu", response_model=Menu)
 async def show_menu():
-    menu_items = redis_service.get_menu_cache()
+    menu_items = await redis_service.get_menu_cache()
 
     if menu_items:
         return menu_items 
     else:
         await service_logic.get_menu()
-        menu_items = redis_service.get_menu_cache()
+        menu_items = await redis_service.get_menu_cache()
         if menu_items:
             return menu_items
         else:
@@ -61,7 +61,7 @@ async def place_order(orders: PlaceOrderRequest):
     if settings.debug_mode:
         print(f"Received orders: {orders}")
 
-    orderPlacedEvent = OrderPlaced(table_no=orders.table_no, order_id=redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
+    orderPlacedEvent = OrderPlaced(table_no=orders.table_no, order_id= redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
 
     await service_logic.place_order(orderPlacedEvent)
 

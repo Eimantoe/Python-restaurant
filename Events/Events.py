@@ -30,6 +30,12 @@ class OrderPlaced(BaseEvent):
     event_type: Literal['OrderPlaced'] = 'OrderPlaced'
     items: List[Dict[str, int]]
     
+    @classmethod
+    def from_redis(cls  , data: dict) -> 'OrderPlaced':
+        if 'items' in data and isinstance(data['items'], str):
+            data['items'] = json.loads(data['items'])
+        return cls.model_validate(data)
+
 class KitchenBaseEvent(BaseEvent):
     pass
 

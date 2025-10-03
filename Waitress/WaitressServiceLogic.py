@@ -23,18 +23,18 @@ class WaitressServiceLogic:
             if settings.debug_mode:
                 print(f"Menu items: {result}")
 
-            redis_service.set_menu_cache(result)
+            await redis_service.set_menu_cache(result)
         else:
             raise HTTPException(status_code=response.status_code, detail="Failed to fetch menu items")
 
     async def place_order(self, orderPlacedEvent: OrderPlaced):
-        redis_service.publish_waitress_order_event(orderPlacedEvent) # type: ignore
+        await redis_service.publish_waitress_order_event(orderPlacedEvent) # type: ignore
 
     async def consume_kitchen_order(self) -> KitchenBaseEvent | None:
 
         last_kitchen_message_id = redis_service.get_last_kitchen_message_id()
 
-        message_id, message_data = redis_service.consume_kitchen_order_event(last_kitchen_message_id) or (None, None)
+        message_id, message_data = await redis_service.consume_kitchen_order_event(last_kitchen_message_id) or (None, None)
 
         if message_id and message_data:
             if settings.debug_mode:

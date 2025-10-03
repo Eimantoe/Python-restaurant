@@ -11,19 +11,19 @@ import httpx
 class KitchenServiceLogic:
     
     def __init__(self):
-        self.last_waitress_message_id   : str = redis_service.get_last_waitress_message_id() or '0-0'
+        self.last_waitress_message_id   : str = redis_service.get_last_waitress_message_id()
 
     async def consume_waitress_order_events(self):
         while True:
             try:
-                message_id, message_data = redis_service.consume_waitress_order_event(self.last_waitress_message_id) or (None, None)
+                message_id, message_data = await redis_service.consume_waitress_order_event(self.last_waitress_message_id) or (None, None)
                 
                 if message_id is None or message_data is None:
                     await asyncio.sleep(100)
                     continue
 
                 self.last_waitress_message_id = message_id # type: ignore
-                self.process_message(message_data)
+                await self.process_message(message_data)
 
                 redis_service.set_last_waitress_message_id(self.last_waitress_message_id)
             except redis.ConnectionError as e:
@@ -31,14 +31,14 @@ class KitchenServiceLogic:
             except Exception as e:
                 print(f"An error occurred: {e}")
 
-    def process_message(self, message_data):
-            match message_data.get('event_type'):
-                case 'OrderPlaced':
-                    self.handle_order_placed(OrderPlaced.model_validate(message_data))
-                case 'OrderCanceled':
-                    self.handle_order_canceled(OrderCanceled.model_validate(message_data))
+    async def process_message(self, message_data):
+        match message_data.get('event_type'):
+            case 'OrderPlaced':
+                await self.handle_order_placed(OrderPlaced.from_redis(message_data))
+            case 'OrderCanceled':
+                await self.handle_order_canceled(OrderCanceled.model_validate(message_data))
 
-    def handle_order_placed(self, event: OrderPlaced):
+    async def handle_order_placed(self, event: OrderPlaced):
 
         if settings.debug_mode:
             print(f"Order placed: {event.order_id}, Items: {event.items}, Table No: {event.table_no}")
@@ -65,11 +65,11 @@ class KitchenServiceLogic:
                 table_no=event.table_no
             )
 
-            redis_service.publish_kitchen_order_event(orderCanceled.to_redis()) # type: ignore
+            await redis_service.publish_kitchen_order_event(orderCanceled.to_redis()) # type: ignore
 
             return
 
-        result = self.consume_recipe_ingredients(consumeRequest)
+        result = await self.consume_recipe_ingredients(consumeRequest)
 
         if settings.debug_mode:
             print(f"All ingredients consumed for order {event.order_id}, order is ready")
@@ -79,9 +79,9 @@ class KitchenServiceLogic:
             table_no=event.table_no
         )
 
-        redis_service.publish_kitchen_order_event(orderReady) # type: ignore
+        await redis_service.publish_kitchen_order_event(orderReady) # type: ignore
 
-    def handle_order_canceled(self, event: OrderCanceled):
+    async def handle_order_canceled(self, event: OrderCanceled):
         if settings.debug_mode:
             print(f"Order canceled: {event.order_id}")
 
@@ -93,7 +93,7 @@ class KitchenServiceLogic:
         URL = "http://localhost:8000/consumeRecipeIngridients"
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(URL, json=request)
+            response = await client.post(URL, json=request.model_dump_json())
 
         if response.status_code == 200:
             result = ConsumeRecipeIngridientsResponse.model_validate(response.json())

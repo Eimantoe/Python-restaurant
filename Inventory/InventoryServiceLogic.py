@@ -2,6 +2,8 @@ from .InventoryServiceModel import CheckRecipeForIngredientsTask, CheckRecipeFor
 from Shared.config import settings
 from .Repository.InventoryRepository import InventoryRepository
 
+import asyncio
+
 class InventoryServiceLogic:
 
     # This class is responsible for the business logic of the inventory service
@@ -15,7 +17,7 @@ class InventoryServiceLogic:
     # If the recipe exists and all ingredients are available in the required quantities, it returns
     # a result indicating that the recipe can be made. Otherwise, it returns a result indicating
     # that the recipe cannot be made.
-    def checkRecipeForIngridients(self, task: CheckRecipeForIngredientsTask) -> CheckRecipeForIngredientsResult:
+    async def checkRecipeForIngridients(self, task: CheckRecipeForIngredientsTask) -> CheckRecipeForIngredientsResult:
 
         if settings.debug_mode:
             print(f"Checking if recipe '{task.recipe_name}' can be made with quantity {task.qty}")
@@ -53,7 +55,7 @@ class InventoryServiceLogic:
             can_make=True
         )  # Assume we can always make the recipe for now
 
-    def consumeIngridients(self, task: ConsumeIngridientsTask) -> ConsumeIngridientsResult:
+    async def consumeIngridients(self, task: ConsumeIngridientsTask) -> ConsumeIngridientsResult:
         
         if settings.debug_mode:
             print(f"Consuming ingredients for recipe '{task.ingridient_name}' with quantity {task.qty}")
@@ -67,7 +69,7 @@ class InventoryServiceLogic:
             consumed=consumed
         )
     
-    def consumeRecipeIngridients(self, task: ConsumeRecipeIngridientsTask) -> ConsumeRecipeIngridientsResult:
+    async def consumeRecipeIngridients(self, task: ConsumeRecipeIngridientsTask) -> ConsumeRecipeIngridientsResult:
         
         if settings.debug_mode:
             print(f"Consuming ingredients for recipe '{task.recipe_name}' with quantity {task.qty}")
@@ -81,7 +83,7 @@ class InventoryServiceLogic:
             consumed=consumed
         )
     
-    def get_menu_items(self) -> Menu:
+    async def get_menu_items(self) -> Menu:
 
         menu_result = self.inventory_repository.get_menu_items()
 

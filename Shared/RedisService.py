@@ -22,25 +22,25 @@ class RedisService:
     def generate_new_id(self, counter_key: str) -> int: 
         return self.client.incr(counter_key) # type: ignore
 
-    def publish_waitress_order_event(self, base_event: BaseEvent):
-        self.publish_event(self.WAITRESS_ORDER_EVENTS, base_event)
+    async def publish_waitress_order_event(self, base_event: BaseEvent):
+        await self.publish_event(self.WAITRESS_ORDER_EVENTS, base_event)
 
-    def consume_waitress_order_event(self, last_id: str = '0-0'):
-        return self.consume_event(self.WAITRESS_ORDER_EVENTS, last_id)
+    async def consume_waitress_order_event(self, last_id: str = '0-0'):
+        return await self.consume_event(self.WAITRESS_ORDER_EVENTS, last_id)
 
-    def publish_kitchen_order_event(self, base_event: BaseEvent):
-        self.publish_event(self.KITCHEN_ORDER_EVENTS, base_event)
+    async def publish_kitchen_order_event(self, base_event: BaseEvent):
+        await self.publish_event(self.KITCHEN_ORDER_EVENTS, base_event)
 
-    def consume_kitchen_order_event(self, last_id: str = '0-0'):
-        return self.consume_event(self.KITCHEN_ORDER_EVENTS, last_id)
+    async def consume_kitchen_order_event(self, last_id: str = '0-0'):
+        return await self.consume_event(self.KITCHEN_ORDER_EVENTS, last_id)
 
-    def publish_event(self, stream: str, base_event):
+    async def publish_event(self, stream: str, base_event):
         event_data = base_event.to_redis()
         self.client.xadd(stream, event_data) # type: ignore
         if settings.debug_mode:
             print(f"Event added to Redis stream '{stream}': {event_data}")
 
-    def consume_event(self, stream: str, last_id: str = '0-0'):
+    async def consume_event(self, stream: str, last_id: str = '0-0'):
         messages = self.client.xread({stream: last_id}, count=1, block=0)
         if messages:
             stream, messages_list = messages[0] # type: ignore
@@ -50,12 +50,12 @@ class RedisService:
             if settings.debug_mode:
                 print(f"No new messages in '{stream}' stream")
 
-    def set_menu_cache(self, menu: Menu) -> None:
+    async def set_menu_cache(self, menu: Menu) -> None:
         self.client.set(self.MENU_CACHE_KEY, menu.model_dump_json(), ex=self.DEFAULT_TTL_SECONDS)
         if settings.debug_mode:
             print(f"Menu items cached under key '{self.MENU_CACHE_KEY}'")
 
-    def get_menu_cache(self) -> Optional[Menu]:
+    async def get_menu_cache(self) -> Optional[Menu]:
         cached_menu = self.client.get(self.MENU_CACHE_KEY)
 
         if not cached_menu and settings.debug_mode:
@@ -71,7 +71,7 @@ class RedisService:
             if settings.debug_mode:
                 print(f"Error validating cached menu data: {e}")
             return None
-        
+
     def get_last_kitchen_message_id(self,) -> str:
         last_id = self.client.get(self.KITCHEN_LAST_MESSAGE_ID_KEY)
         if settings.debug_mode:

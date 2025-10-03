@@ -38,9 +38,9 @@ async def add_process_time_header(request, call_next):
 @app.post("/checkRecipeForIngredients", response_model=CheckRecipeForIngredientsResponse)
 async def check_recipe_for_ingredients(request: CheckRecipeForIngredientsRequest):
     try:
-            
-        results = [inventory_service.checkRecipeForIngridients(task) for task in request.recipe_ids]
-        
+
+        results = [await inventory_service.checkRecipeForIngridients(task) for task in request.recipe_ids]
+
         if settings.debug_mode:
             print(f"check_recipe_for_ingridients results: {results}")
 
@@ -52,7 +52,7 @@ async def check_recipe_for_ingredients(request: CheckRecipeForIngredientsRequest
 @app.post("/consumeIngridients", response_model=ConsumeIngridientsResponse)
 async def consume_ingredients(request: ConsumeIngridientsRequest):
     try:
-        results = [inventory_service.consumeIngridients(task) for task in request.tasks]
+        results = [await inventory_service.consumeIngridients(task) for task in request.tasks]
 
         if settings.debug_mode: 
             print(f"consume_ingredients results: {results}")
@@ -64,7 +64,7 @@ async def consume_ingredients(request: ConsumeIngridientsRequest):
 @app.post("/consumeRecipeIngridients", response_model=ConsumeRecipeIngridientsResponse)
 async def consume_recipe_ingredients(request: ConsumeRecipeIngridientsRequest):
     try:
-        results = [inventory_service.consumeRecipeIngridients(task) for task in request.tasks]
+        results = [await inventory_service.consumeRecipeIngridients(task) for task in request.tasks]
 
         if settings.debug_mode: 
             print(f"consume_recipe_ingredients results: {results}")
@@ -75,4 +75,4 @@ async def consume_recipe_ingredients(request: ConsumeRecipeIngridientsRequest):
 
 @app.get("/menu", response_model=Menu)
 async def get_menu_items():
-    return inventory_service.get_menu_items()
+    return await inventory_service.get_menu_items()
