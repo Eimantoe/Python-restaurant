@@ -1,8 +1,8 @@
 
 
 from contextlib import asynccontextmanager
-from Events.Events import OrderPlaced
-from .WaitressServiceModel import PlaceOrderRequest, PlaceOrderRequestItem, PlaceOrderResponse
+from Events.Events import OrderCanceled, OrderPlaced, OrderReady
+from .WaitressServiceModel import KitchenOrderResponse, PlaceOrderRequest, PlaceOrderRequestItem, PlaceOrderResponse
 
 import os
 import sys
@@ -61,17 +61,27 @@ async def place_order(orders: PlaceOrderRequest):
     if settings.debug_mode:
         print(f"Received orders: {orders}")
 
-    orderPlacedEvent = OrderPlaced(table_no=orders.table_no, order_id=redis_service.generate_new_id("event_id_counter"), items=[item.model_dump() for item in orders.items])
+    orderPlacedEvent = OrderPlaced(table_no=orders.table_no, order_id=redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
 
     await service_logic.place_order(orderPlacedEvent)
 
     return PlaceOrderResponse(order_id=orderPlacedEvent.order_id)
 
-@app.post("/consume-kitchen-order")
-async def consume_kitchen_order(last_id: str = '0-0'):
-    message_id, message_data = await service_logic.consume_kitchen_order(last_id)
-    if message_id and message_data:
-        return {"message_id": message_id, "message_data": message_data}
+@app.get("/consume-kitchen-order", response_model=KitchenOrderResponse)
+async def consume_kitchen_order():
+
+    kitchen_base_event = await service_logic.consume_kitchen_order()
+
+    if kitchen_base_event:
+        if isinstance(kitchen_base_event, OrderReady):
+            if settings.debug_mode:
+                print(f"Order ready: {kitchen_base_event.order_id}")
+            return KitchenOrderResponse(order_id=kitchen_base_event.order_id, status="Ready")
+        elif isinstance(kitchen_base_event, OrderCanceled):
+            if settings.debug_mode:
+                print(f"Order canceled: {kitchen_base_event.order_id}")
+            return KitchenOrderResponse(order_id=kitchen_base_event.order_id, status="Canceled")
+
     else:
         raise HTTPException(status_code=404, detail="No new kitchen orders")
 

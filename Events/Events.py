@@ -1,12 +1,12 @@
 import json
+
 from typing_extensions import Literal
 from pydantic import BaseModel
 from typing import List, Dict
-#from Shared.RedisService import redis_service
 
 class BaseEvent(BaseModel):
 
-    order_id: int = 1#redis_service.generate_new_id("event_id_counter")
+    order_id: int
     table_no: int
 
     def to_redis(self) -> dict[str, str]:
@@ -30,9 +30,12 @@ class OrderPlaced(BaseEvent):
     event_type: Literal['OrderPlaced'] = 'OrderPlaced'
     items: List[Dict[str, int]]
     
-class OrderCanceled(BaseEvent):
+class KitchenBaseEvent(BaseEvent):
+    pass
+
+class OrderCanceled(KitchenBaseEvent):
     event_type: Literal['OrderCanceled'] = 'OrderCanceled'
 
-class OrderReady(BaseEvent):
+class OrderReady(KitchenBaseEvent):
     event_type: Literal['OrderReady'] = 'OrderReady'
     

@@ -7,11 +7,14 @@ from Shared.config import settings
 class RedisService:
 
     MENU_CACHE_KEY              = "menu_items"
-    KITCHEN_LAST_ORDER_ID_KEY   = "kitchen_last_order_id"
-
+    
     DEFAULT_TTL_SECONDS         = 3600  # 1 hour
+    
     WAITRESS_ORDER_EVENTS       = "waitress_order_events"
     KITCHEN_ORDER_EVENTS        = "kitchen_order_events"
+
+    KITCHEN_LAST_MESSAGE_ID_KEY   = "kitchen_last_message_id"
+    WAITRESS_LAST_MESSAGE_ID_KEY  = "waitress_last_message_id"
 
     def __init__(self, host='localhost', port=6379, db=0):
         self.client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
@@ -69,15 +72,26 @@ class RedisService:
                 print(f"Error validating cached menu data: {e}")
             return None
         
-    def get_last_processed_id(self,) -> str:
-        last_id = self.client.get(self.KITCHEN_LAST_ORDER_ID_KEY)
+    def get_last_kitchen_message_id(self,) -> str:
+        last_id = self.client.get(self.KITCHEN_LAST_MESSAGE_ID_KEY)
         if settings.debug_mode:
-            print(f"Retrieved last processed ID '{last_id}'")
+            print(f"Retrieved last kitchen message ID '{last_id}'")
         return last_id if last_id else "0-0" # type: ignore
 
-    def set_last_processed_id(self, last_id: str):
-        self.client.set(self.KITCHEN_LAST_ORDER_ID_KEY, last_id)
+    def set_last_kitchen_message_id(self, last_id: str):
+        self.client.set(self.KITCHEN_LAST_MESSAGE_ID_KEY, last_id)
         if settings.debug_mode:
-            print(f"Saved last processed ID '{last_id}'")
+            print(f"Saved last kitchen message ID '{last_id}'")
+
+    def get_last_waitress_message_id(self,) -> str:
+        last_id = self.client.get(self.WAITRESS_LAST_MESSAGE_ID_KEY)
+        if settings.debug_mode:
+            print(f"Retrieved last waitress message ID '{last_id}'")
+        return last_id if last_id else "0-0" # type: ignore
+
+    def set_last_waitress_message_id(self, last_id: str):
+        self.client.set(self.WAITRESS_LAST_MESSAGE_ID_KEY, last_id)
+        if settings.debug_mode:
+            print(f"Saved last waitress message ID '{last_id}'")
 
 redis_service = RedisService()

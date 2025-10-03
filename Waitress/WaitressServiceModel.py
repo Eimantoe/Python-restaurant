@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 from pydantic import BaseModel
 
 class MenuItem(BaseModel):
@@ -14,8 +14,14 @@ class PlaceOrderRequestItem(BaseModel):
 
 class PlaceOrderRequest(BaseModel):
     table_no: int
-    items: List[PlaceOrderRequestItem]
+    items: List[Dict[str, int]]
 
 class PlaceOrderResponse(BaseModel):
     order_id: int
+
+class KitchenOrderResponse(BaseModel):
+    order_id: int
+    status: str
+
+
 
