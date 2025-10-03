@@ -48,7 +48,7 @@ async def check_recipe_for_ingredients(request: CheckRecipeForIngredientsRequest
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-
+'''
 @app.post("/consumeIngridients", response_model=ConsumeIngridientsResponse)
 async def consume_ingredients(request: ConsumeIngridientsRequest):
     try:
@@ -60,7 +60,7 @@ async def consume_ingredients(request: ConsumeIngridientsRequest):
         return ConsumeIngridientsResponse(user_id=request.user_id, results=results)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+''' 
 @app.post("/consumeRecipeIngridients", response_model=ConsumeRecipeIngridientsResponse)
 async def consume_recipe_ingredients(request: ConsumeRecipeIngridientsRequest):
     try:

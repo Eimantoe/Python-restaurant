@@ -5,12 +5,12 @@ class InventoryRepository:
 
     db_path = "./Inventory/Repository/kitchen.db"
     
-    async def get_connection(self):
-        return await aiosqlite.connect(self.db_path)
+    def get_connection(self):
+        return aiosqlite.connect(self.db_path)
 
     async def get_menu_items(self) -> List[Dict[str, str]]:
         """Asynchronously gets all menu items from the recipes table."""
-        async with await self.get_connection() as conn:
+        async with self.get_connection() as conn:
             conn.row_factory = aiosqlite.Row
             async with conn.execute("SELECT name, description FROM recipes") as cursor:
                 rows = await cursor.fetchall()
@@ -32,7 +32,7 @@ class InventoryRepository:
 
     async def get_recipe_ingridients_by_name(self, recipe_name: str) -> List[Dict[str, Any]]:
         """Asynchronously gets the ingredients for a specific recipe by its name."""
-        async with await self.get_connection() as conn:
+        async with self.get_connection() as conn:
             conn.row_factory = aiosqlite.Row
             async with conn.execute("SELECT Name, RequiredQty FROM recipeingridient WHERE recipe = ?", (recipe_name,)) as cursor:
                 rows = await cursor.fetchall()
@@ -40,20 +40,19 @@ class InventoryRepository:
 
     async def check_ingridient_availability(self, ingridient_name: str, required_qty: int) -> bool:
         """Asynchronously checks if a single ingredient is available in the required quantity."""
-        async with await self.get_connection() as conn:
+        async with self.get_connection() as conn:
             async with conn.execute("SELECT qty FROM supplies WHERE name = ?", (ingridient_name,)) as cursor:
                 result = await cursor.fetchone()
                 if result:
                     return result[0] >= required_qty
                 return False
-        
-    async def consume_ingridient(self, ingridient_name: str, qty: int) -> bool:
+
+    async def consume_ingridient(self, conn: aiosqlite.Connection, ingridient_name: str, qty: int) -> bool:
         """
         Asynchronously consumes a specified quantity of an ingredient using an existing connection.
         Note: This method does not commit the transaction.
         """
-        async with await self.get_connection() as conn:
-            cursor = await conn.execute("UPDATE supplies SET qty = qty - ? WHERE name = ? AND qty >= ?", (qty, ingridient_name, qty))
+        cursor = await conn.execute("UPDATE supplies SET qty = qty - ? WHERE name = ? AND qty >= ?", (qty, ingridient_name, qty))
         return cursor.rowcount > 0
 
     async def consume_recipe_ingridients(self, recipe_name: str, qty: int) -> bool:
@@ -66,14 +65,14 @@ class InventoryRepository:
         if not recipe_ingridients:
             return False
 
-        async with await self.get_connection() as conn:
+        async with self.get_connection() as conn:
             try:
                 # Start a transaction
                 await conn.execute("BEGIN")
 
                 for ingridient in recipe_ingridients:
                     required_qty = ingridient['RequiredQty'] * qty
-                    success = await self.consume_ingridient(ingridient['Name'], required_qty)
+                    success = await self.consume_ingridient(conn, ingridient['Name'], required_qty)
                     if not success:
                         # If any ingredient fails, roll back and return False
                         await conn.rollback()

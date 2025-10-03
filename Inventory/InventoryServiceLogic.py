@@ -55,20 +55,8 @@ class InventoryServiceLogic:
             can_make=True
         )  # Assume we can always make the recipe for now
 
-    async def consumeIngridients(self, task: ConsumeIngridientsTask) -> ConsumeIngridientsResult:
-        
-        if settings.debug_mode:
-            print(f"Consuming ingredients for recipe '{task.ingridient_name}' with quantity {task.qty}")
 
-        # Consume ingredients from the inventory
-        consumed = await self.inventory_repository.consume_ingridient(task.ingridient_name, task.qty)
 
-        return ConsumeIngridientsResult(
-            id=task.id,
-            ingridient_name=task.ingridient_name,
-            consumed=consumed
-        )
-    
     async def consumeRecipeIngridients(self, task: ConsumeRecipeIngridientsTask) -> ConsumeRecipeIngridientsResult:
         
         if settings.debug_mode:
@@ -90,3 +78,20 @@ class InventoryServiceLogic:
         menu = Menu(items=[MenuItem(name=item.get("Name"), description=item.get("Description")) for item in menu_result]) # type: ignore
 
         return menu
+    
+
+'''
+    async def consumeIngridients(self, task: ConsumeIngridientsTask) -> ConsumeIngridientsResult:
+        
+        if settings.debug_mode:
+            print(f"Consuming ingredients for recipe '{task.ingridient_name}' with quantity {task.qty}")
+
+        # Consume ingredients from the inventory
+        consumed = await self.inventory_repository.consume_ingridient(task.ingridient_name, task.qty)
+
+        return ConsumeIngridientsResult(
+            id=task.id,
+            ingridient_name=task.ingridient_name,
+            consumed=consumed
+        )
+'''
