@@ -61,7 +61,7 @@ async def place_order(orders: PlaceOrderRequest):
     if settings.debug_mode:
         print(f"Received orders: {orders}")
 
-    orderPlacedEvent = OrderPlaced(table_no=orders.table_no, order_id= redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
+    orderPlacedEvent = OrderPlaced(table_no=orders.table_no, order_id= await redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
 
     await service_logic.place_order(orderPlacedEvent)
 
@@ -81,7 +81,6 @@ async def consume_kitchen_order():
             if settings.debug_mode:
                 print(f"Order canceled: {kitchen_base_event.order_id}")
             return KitchenOrderResponse(order_id=kitchen_base_event.order_id, status="Canceled")
-
     else:
         raise HTTPException(status_code=404, detail="No new kitchen orders")
 

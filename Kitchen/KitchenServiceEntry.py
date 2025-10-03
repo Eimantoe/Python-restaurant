@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 
@@ -22,7 +23,10 @@ async def lifespan(app: FastAPI):
     if settings.debug_mode:
         print("Kitchen service starting up...")
 
-    await kitchen_service_logic.consume_waitress_order_events()
+    # Use the async factory to create the instance
+    kitchen_service_logic = await KitchenServiceLogic.create()  
+    # Start the background task to consume waitress order events
+    asyncio.create_task(kitchen_service_logic.consume_waitress_order_events())
 
     yield
 

@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 import redis
 from Events.Events import OrderCanceled, OrderPlaced, OrderReady
 from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsResult, ConsumeRecipeIngridientsTask
@@ -10,8 +11,22 @@ import httpx
 
 class KitchenServiceLogic:
     
-    def __init__(self):
-        self.last_waitress_message_id   : str = redis_service.get_last_waitress_message_id()
+    #def __init__(self):
+        #self.last_waitress_message_id   : str = redis_service.get_last_waitress_message_id()
+
+    async def _initialize_last_message_id(self):
+        self.last_waitress_message_id = await redis_service.get_last_waitress_message_id()
+
+    # 3. The async factory using @classmethod
+    @classmethod
+    async def create(cls):
+        """
+        Asynchronously creates and initializes an instance of KitchenServiceLogic.
+        """
+        instance = cls()
+        await instance._initialize_last_message_id()
+        return instance
+
 
     async def consume_waitress_order_events(self):
         while True:
@@ -25,11 +40,12 @@ class KitchenServiceLogic:
                 self.last_waitress_message_id = message_id # type: ignore
                 await self.process_message(message_data)
 
-                redis_service.set_last_waitress_message_id(self.last_waitress_message_id)
+                await redis_service.set_last_waitress_message_id(self.last_waitress_message_id)
             except redis.ConnectionError as e:
                 print(f"Redis connection error: {e}")
             except Exception as e:
                 print(f"An error occurred: {e}")
+                print(traceback.format_exc())
 
     async def process_message(self, message_data):
         match message_data.get('event_type'):
@@ -70,7 +86,7 @@ class KitchenServiceLogic:
             return
 
         result = await self.consume_recipe_ingredients(consumeRequest)
-
+        
         if settings.debug_mode:
             print(f"All ingredients consumed for order {event.order_id}, order is ready")
 
@@ -78,6 +94,10 @@ class KitchenServiceLogic:
             order_id=event.order_id,
             table_no=event.table_no
         )
+
+        order_consumption_comments = [f"{consumptionResult.recipe_name}: {'Success' if consumptionResult.consumed else 'Failed'}" for consumptionResult in result.results]
+
+        orderReady.comments = ", ".join(order_consumption_comments)
 
         await redis_service.publish_kitchen_order_event(orderReady) # type: ignore
 
@@ -93,7 +113,7 @@ class KitchenServiceLogic:
         URL = "http://localhost:8000/consumeRecipeIngridients"
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(URL, json=request.model_dump_json())
+            response = await client.post(URL, json=request.model_dump())
 
         if response.status_code == 200:
             result = ConsumeRecipeIngridientsResponse.model_validate(response.json())
@@ -102,21 +122,8 @@ class KitchenServiceLogic:
                 print(f"Ingredient consume response: {result}")
 
         else:
-
-            result = ConsumeRecipeIngridientsResponse(
-                user_id="kitchen_service",
-                results=[
-                    ConsumeRecipeIngridientsResult(
-                        id=task.id,
-                        recipe_name=task.recipe_name,
-                        consumed=False
-                    ) for task in request.tasks
-                ]
-            )
-
-            if settings.debug_mode:
-                print(f"Error consuming ingredients: {response.status_code}")
-
+            raise Exception(f"Failed to consume ingredients: {response.status_code} - {response.text}")
+        
         # Simulate processing time
         await asyncio.sleep(100)
 

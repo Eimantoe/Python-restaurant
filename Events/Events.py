@@ -44,4 +44,5 @@ class OrderCanceled(KitchenBaseEvent):
 
 class OrderReady(KitchenBaseEvent):
     event_type: Literal['OrderReady'] = 'OrderReady'
+    comments: str = ""
     

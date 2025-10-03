@@ -1,6 +1,9 @@
+import asyncio
 from contextlib import asynccontextmanager
 import sys
 import os
+
+from Kitchen.KitchenServiceLogic import KitchenServiceLogic
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -48,19 +51,6 @@ async def check_recipe_for_ingredients(request: CheckRecipeForIngredientsRequest
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-'''
-@app.post("/consumeIngridients", response_model=ConsumeIngridientsResponse)
-async def consume_ingredients(request: ConsumeIngridientsRequest):
-    try:
-        results = [await inventory_service.consumeIngridients(task) for task in request.tasks]
-
-        if settings.debug_mode: 
-            print(f"consume_ingredients results: {results}")
-
-        return ConsumeIngridientsResponse(user_id=request.user_id, results=results)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-''' 
 @app.post("/consumeRecipeIngridients", response_model=ConsumeRecipeIngridientsResponse)
 async def consume_recipe_ingredients(request: ConsumeRecipeIngridientsRequest):
     try:
