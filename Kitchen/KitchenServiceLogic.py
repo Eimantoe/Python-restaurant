@@ -2,11 +2,10 @@ import asyncio
 import traceback
 import redis
 from Events.Events import OrderCanceled, OrderPlaced, OrderReady
-from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsResult, ConsumeRecipeIngridientsTask
+from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask
 from Shared.RedisService import redis_service
-from Shared.config import settings
+from Shared.Settings import settings
 from Shared.Logging import logger
-from time import sleep
 import httpx
 
 

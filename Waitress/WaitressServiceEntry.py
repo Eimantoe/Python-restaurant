@@ -1,8 +1,6 @@
-
-
 from contextlib import asynccontextmanager
 from Events.Events import OrderCanceled, OrderPlaced, OrderReady
-from .WaitressServiceModel import KitchenOrderResponse, PlaceOrderRequest, PlaceOrderRequestItem, PlaceOrderResponse
+from .WaitressServiceModel import KitchenOrderResponse, PlaceOrderRequest, PlaceOrderResponse
 
 import os
 import sys
@@ -10,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from Waitress.WaitressServiceModel import Menu
-from Shared.config import settings
+from Shared.Settings import settings
 import time
 
 from fastapi import FastAPI, HTTPException

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List
 import uuid
 
 # This model is used to check if a recipe can be made with the available ingredients

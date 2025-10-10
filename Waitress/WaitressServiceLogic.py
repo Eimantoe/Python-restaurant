@@ -1,10 +1,9 @@
 import asyncio
-from fastapi import HTTPException
-from Shared.config import settings
+from Shared.Settings import settings
 from Shared.Logging import logger
 from .WaitressServiceModel import Menu
 from Shared.RedisService import redis_service
-from Events.Events import KitchenBaseEvent, OrderCanceled, OrderPlaced, OrderReady
+from Events.Events import OrderCanceled, OrderPlaced, OrderReady
 import httpx
 
 class WaitressServiceLogic:

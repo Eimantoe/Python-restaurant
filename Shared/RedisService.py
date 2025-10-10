@@ -2,7 +2,7 @@ from typing import Optional
 import redis.asyncio as redis
 from Events.Events import BaseEvent
 from Waitress.WaitressServiceModel import Menu
-from Shared.config import settings
+from Shared.Settings import settings
 from Shared.Logging import logger
 
 class RedisService:

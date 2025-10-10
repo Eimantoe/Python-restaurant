@@ -8,13 +8,9 @@ import time
 
 from contextlib import asynccontextmanager
 from .KitchenServiceLogic import KitchenServiceLogic
-from Shared.RedisService import redis_service
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 
-from Events.Events import OrderPlaced, OrderCanceled, OrderReady
-from Shared.config import settings
 from Shared.Logging import logger
-from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult
 
 kitchen_service_logic = KitchenServiceLogic()
 

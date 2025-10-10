@@ -3,9 +3,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings): # type: ignore
     debug_mode: bool = True
 
-    inventory_service_url   : str = "https://localhost:8000"
-    waitress_service_url    : str = "https://localhost:6000"
-    kitchen_service_url     : str = "https://localhost:7000"
+    inventory_service_url   : str = "http://localhost:8000"
+    waitress_service_url    : str = "http://localhost:6000"
+    kitchen_service_url     : str = "http://localhost:7000"
 
     redis_host: str = "localhost"
     redis_port: int = 6379

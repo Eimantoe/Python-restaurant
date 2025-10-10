@@ -1,5 +1,4 @@
 from .InventoryServiceModel import CheckRecipeForIngredientsTask, CheckRecipeForIngredientsResult, ConsumeIngridientsTask, ConsumeIngridientsResult, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult, Menu, MenuItem
-from Shared.config import settings
 from .Repository.InventoryRepository import InventoryRepository
 from Shared.Logging import logger
 

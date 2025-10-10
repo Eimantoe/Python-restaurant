@@ -1,7 +1,7 @@
 import logging
 import sys
 import structlog
-from Shared.config import settings
+from Shared.Settings import settings
 
 def configure_logging(is_dev_mode=True):
     """
