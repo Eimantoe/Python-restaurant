@@ -65,7 +65,7 @@ async def show_menu():
 async def place_order(orders: PlaceOrderRequest):
     logger.info("Order placed", orders=orders)
 
-    orderPlacedEvent = OrderPlaced(table_no=orders.table_no, order_id= await redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
+    orderPlacedEvent = OrderPlaced(comments=orders.comments, table_no=orders.table_no, order_id= await redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
 
     await service_logic.place_order(orderPlacedEvent)
 
@@ -78,13 +78,17 @@ async def consume_kitchen_order():
 
     kitchen_base_event = await service_logic.consume_kitchen_order()
 
+    status = ""
+
     if kitchen_base_event:
         if isinstance(kitchen_base_event, OrderReady):
             logger.info("Order ready", order_id=kitchen_base_event.order_id)
-            return KitchenOrderResponse(order_id=kitchen_base_event.order_id, status="Ready")
+            status = "Ready"
         elif isinstance(kitchen_base_event, OrderCanceled):
             logger.info("Order canceled", order_id=kitchen_base_event.order_id)
-            return KitchenOrderResponse(order_id=kitchen_base_event.order_id, status="Canceled")
+            status = "Canceled"
+            
+        return KitchenOrderResponse(order_id=kitchen_base_event.order_id, status=status, comments=kitchen_base_event.comments)
     else:
         logger.warning("No new kitchen orders to consume")
         raise HTTPException(status_code=404, detail="No new kitchen orders")

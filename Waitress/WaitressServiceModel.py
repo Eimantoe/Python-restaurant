@@ -15,6 +15,7 @@ class PlaceOrderRequestItem(BaseModel):
 class PlaceOrderRequest(BaseModel):
     table_no: int
     items: List[Dict[str, int]]
+    comments: str = ""
 
 class PlaceOrderResponse(BaseModel):
     order_id: int
@@ -22,6 +23,7 @@ class PlaceOrderResponse(BaseModel):
 class KitchenOrderResponse(BaseModel):
     order_id: int
     status: str
+    comments: str
 
 
 

@@ -8,6 +8,7 @@ class BaseEvent(BaseModel):
 
     order_id: int
     table_no: int
+    comments: str
 
     def to_redis(self) -> dict[str, str]:
         data = self.model_dump()
@@ -44,5 +45,4 @@ class OrderCanceled(KitchenBaseEvent):
 
 class OrderReady(KitchenBaseEvent):
     event_type: Literal['OrderReady'] = 'OrderReady'
-    comments: str = ""
     

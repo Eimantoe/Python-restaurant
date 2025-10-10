@@ -5,6 +5,7 @@ from .WaitressServiceModel import Menu
 from Shared.RedisService import redis_service
 from Events.Events import OrderCanceled, OrderPlaced, OrderReady
 import httpx
+from Shared.APIRequest import APIRequest
 
 class WaitressServiceLogic:
 
@@ -13,27 +14,20 @@ class WaitressServiceLogic:
         logger.info("Fetching menu items...")
 
         URL = settings.inventory_service_url + "/menu"
-        MAX_RETRY_COUNT = 5
-        RETRY_DELAY_SECONDS = 2 # Delay between retries
 
-        for attempt in range(MAX_RETRY_COUNT):
-            try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.get(URL)
+        api_request = APIRequest(APIRequest.Method.GET, URL)
 
-                if response.status_code == 200:
-                    result = Menu.model_validate(response.json())
+        response = await api_request.sendRequest()
 
-                    logger.info("Menu items fetched successfully", menu_items=result)
-                    await redis_service.set_menu_cache(result)
-                    return  # Exit the function if successful
-                else:
-                    logger.warning("Failed to fetch menu items", status_code=response.status_code)
-            except httpx.RequestError as e:
-                logger.error("Request error occurred", error=str(e))
+        if response:
+            result = Menu.model_validate(response.json())
 
-            logger.info("Retrying in %d seconds... (Attempt %d/%d)", RETRY_DELAY_SECONDS, attempt + 1, MAX_RETRY_COUNT)
-            await asyncio.sleep(RETRY_DELAY_SECONDS)
+            logger.info("Menu items fetched successfully", menu_items=result)
+            await redis_service.set_menu_cache(result)
+            return  # Exit the function if successful
+        else:
+            logger.error("Failed to fetch menu items after retries")
+            raise Exception("Failed to fetch menu items from Inventory Service")
 
 
 

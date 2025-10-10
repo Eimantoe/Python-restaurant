@@ -6,6 +6,7 @@ from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, Con
 from Shared.RedisService import redis_service
 from Shared.Settings import settings
 from Shared.Logging import logger
+from Shared.APIRequest import APIRequest
 import httpx
 
 
@@ -78,7 +79,8 @@ class KitchenServiceLogic:
 
             orderCanceled = OrderCanceled(
                 order_id=event.order_id,
-                table_no=event.table_no
+                table_no=event.table_no,
+                comments="No valid items in order"
             )
 
             logger.info("Publishing order canceled event", order_id=event.order_id)
@@ -86,8 +88,8 @@ class KitchenServiceLogic:
             return
 
         result = await self.consume_recipe_ingredients(consumeRequest)
-        
-        order_consumption_comments = [f"{consumptionResult.recipe_name}: {'Success' if consumptionResult.consumed else 'Failed'}" for consumptionResult in result.results]
+
+        order_consumption_comments = [f"{consumptionResult.recipe_name}: {'Success' if consumptionResult.consumed else 'Failed'} - {consumptionResult.comments}" for consumptionResult in result.results]
 
         logger.info("Order ingredient consumption results", order_id=event.order_id, results=order_consumption_comments)
 
@@ -108,16 +110,15 @@ class KitchenServiceLogic:
 
         URL = settings.inventory_service_url + "/consumeRecipeIngridients"
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(URL, json=request.model_dump())
+        api_request = APIRequest(APIRequest.Method.POST, URL, request.model_dump())
 
-        if response.status_code == 200:
+        response = await api_request.sendRequest()
+
+        if response:
             result = ConsumeRecipeIngridientsResponse.model_validate(response.json())
-
             logger.info("consume_recipe_ingredients result", user_id=request.user_id, tasks=len(request.tasks), result=result)
-
         else:
-            logger.error("Failed to consume ingredients", status_code=response.status_code, response_text=response.text)
-            raise Exception(f"Failed to consume ingredients: {response.status_code} - {response.text}")
-
+            logger.error("Failed to consume recipe ingredients after retries", user_id=request.user_id, tasks=len(request.tasks))
+            raise Exception("Failed to consume recipe ingredients from Inventory Service")
+        
         return result           

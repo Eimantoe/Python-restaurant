@@ -60,14 +60,15 @@ class InventoryServiceLogic:
         logger.info("consume_recipe_ingredients called", recipe_name=task.recipe_name, qty=task.qty)
 
         # Consume ingredients for the recipe from the inventory
-        consumed = await self.inventory_repository.consume_recipe_ingridients(task.recipe_name, task.qty)
+        (consumed, comments) = await self.inventory_repository.consume_recipe_ingridients(task.recipe_name, task.qty)
 
         logger.info("consume_recipe_ingredients result", recipe_name=task.recipe_name, qty=task.qty, consumed=consumed)
 
         return ConsumeRecipeIngridientsResult(
             id=task.id,
             recipe_name=task.recipe_name,
-            consumed=consumed
+            consumed=consumed,
+            comments=comments
         )
     
     async def get_menu_items(self) -> Menu:

@@ -58,6 +58,7 @@ class ConsumeRecipeIngridientsResult(BaseModel):
     id: str
     recipe_name: str
     consumed: bool
+    comments: str = ""
 
 class ConsumeRecipeIngridientsResponse(BaseModel):
     user_id: str

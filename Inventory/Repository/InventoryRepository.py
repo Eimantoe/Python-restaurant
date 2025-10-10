@@ -1,5 +1,6 @@
 import aiosqlite
 from typing import Any, Dict, List
+from Shared.Logging import logger
 
 class InventoryRepository:
 
@@ -55,7 +56,7 @@ class InventoryRepository:
         cursor = await conn.execute("UPDATE supplies SET qty = qty - ? WHERE name = ? AND qty >= ?", (qty, ingridient_name, qty))
         return cursor.rowcount > 0
 
-    async def consume_recipe_ingridients(self, recipe_name: str, qty: int) -> bool:
+    async def consume_recipe_ingridients(self, recipe_name: str, qty: int) -> tuple[bool, str]:
         """
         Asynchronously consumes all ingredients for a recipe in a single database transaction.
         If any ingredient consumption fails, the entire transaction is rolled back.
@@ -63,7 +64,8 @@ class InventoryRepository:
         recipe_ingridients = await self.get_recipe_ingridients_by_name(recipe_name)
 
         if not recipe_ingridients:
-            return False
+            logger.warning("Recipe not found when trying to consume ingredients", recipe_name=recipe_name)
+            return (False, "Recipe not found")
 
         async with self.get_connection() as conn:
             try:
@@ -76,12 +78,12 @@ class InventoryRepository:
                     if not success:
                         # If any ingredient fails, roll back and return False
                         await conn.rollback()
-                        return False
+                        return (False, "Failed to consume ingredients")
 
                 # If all ingredients are consumed successfully, commit the transaction
                 await conn.commit()
-                return True
+                return (True, "Ingredients consumed successfully")
             except Exception:
                 # Rollback on any other exception
                 await conn.rollback()
-                return False
+                return (False, "Failed to consume ingredients")
