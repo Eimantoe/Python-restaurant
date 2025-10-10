@@ -1,8 +1,8 @@
 from .InventoryServiceModel import CheckRecipeForIngredientsTask, CheckRecipeForIngredientsResult, ConsumeIngridientsTask, ConsumeIngridientsResult, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult, Menu, MenuItem
 from Shared.config import settings
 from .Repository.InventoryRepository import InventoryRepository
+from Shared.Logging import logger
 
-import asyncio
 
 class InventoryServiceLogic:
 
@@ -19,12 +19,13 @@ class InventoryServiceLogic:
     # that the recipe cannot be made.
     async def checkRecipeForIngridients(self, task: CheckRecipeForIngredientsTask) -> CheckRecipeForIngredientsResult:
 
-        if settings.debug_mode:
-            print(f"Checking if recipe '{task.recipe_name}' can be made with quantity {task.qty}")
-
+        logger.info("check_recipe_for_ingredients called", recipe_name=task.recipe_name, qty=task.qty)
+        
         # Check if the recipe exists in the database
         if not await self.inventory_repository.get_recipe_ingridients_by_name(task.recipe_name):
-            print(f"Recipe '{task.recipe_name}' not found in the database.")
+            
+            logger.warning("Recipe not found", recipe_name=task.recipe_name)
+            
             return CheckRecipeForIngredientsResult(
                 id=task.id,  # Generate a unique ID for the result
                 recipe_id=task.recipe_name,  # Use the task ID as the recipe ID
@@ -36,17 +37,15 @@ class InventoryServiceLogic:
 
         if not can_make:
             
-            if settings.debug_mode:
-                print(f"Insufficient ingredients for recipe '{task.recipe_name}' with quantity {task.qty}")
-            
+            logger.warning("Insufficient ingredients for recipe", recipe_name=task.recipe_name, qty=task.qty)
+
             return CheckRecipeForIngredientsResult(
                 id=task.id,  # Generate a unique ID for the result
                 recipe_id=task.recipe_name,  # Use the task ID as the recipe ID
                 can_make=False
             )
 
-        if settings.debug_mode:
-            print(f"Recipe '{task.recipe_name}' can be made with the available ingredients.")
+        logger.info("Recipe can be made", recipe_name=task.recipe_name)
 
         # If all checks pass, return a result indicating the recipe can be made
         return CheckRecipeForIngredientsResult(
@@ -59,11 +58,12 @@ class InventoryServiceLogic:
 
     async def consumeRecipeIngridients(self, task: ConsumeRecipeIngridientsTask) -> ConsumeRecipeIngridientsResult:
         
-        if settings.debug_mode:
-            print(f"Consuming ingredients for recipe '{task.recipe_name}' with quantity {task.qty}")
+        logger.info("consume_recipe_ingredients called", recipe_name=task.recipe_name, qty=task.qty)
 
         # Consume ingredients for the recipe from the inventory
         consumed = await self.inventory_repository.consume_recipe_ingridients(task.recipe_name, task.qty)
+
+        logger.info("consume_recipe_ingredients result", recipe_name=task.recipe_name, qty=task.qty, consumed=consumed)
 
         return ConsumeRecipeIngridientsResult(
             id=task.id,
@@ -73,25 +73,13 @@ class InventoryServiceLogic:
     
     async def get_menu_items(self) -> Menu:
 
+        logger.info("get_menu_items called")
+
         menu_result = await self.inventory_repository.get_menu_items()
+
+        logger.info("get_menu_items result", menu_items=menu_result)
 
         menu = Menu(items=[MenuItem(name=item.get("Name"), description=item.get("Description")) for item in menu_result]) # type: ignore
 
         return menu
-    
 
-'''
-    async def consumeIngridients(self, task: ConsumeIngridientsTask) -> ConsumeIngridientsResult:
-        
-        if settings.debug_mode:
-            print(f"Consuming ingredients for recipe '{task.ingridient_name}' with quantity {task.qty}")
-
-        # Consume ingredients from the inventory
-        consumed = await self.inventory_repository.consume_ingridient(task.ingridient_name, task.qty)
-
-        return ConsumeIngridientsResult(
-            id=task.id,
-            ingridient_name=task.ingridient_name,
-            consumed=consumed
-        )
-'''

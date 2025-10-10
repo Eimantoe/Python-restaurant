@@ -13,6 +13,7 @@ from fastapi import FastAPI, HTTPException
 
 from Events.Events import OrderPlaced, OrderCanceled, OrderReady
 from Shared.config import settings
+from Shared.Logging import logger
 from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult
 
 kitchen_service_logic = KitchenServiceLogic()
@@ -20,8 +21,7 @@ kitchen_service_logic = KitchenServiceLogic()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    if settings.debug_mode:
-        print("Kitchen service starting up...")
+    logger.info("Starting kitchen service...")
 
     # Use the async factory to create the instance
     kitchen_service_logic = await KitchenServiceLogic.create()  
@@ -30,8 +30,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    if settings.debug_mode:
-        print("Kitchen service shutting down...")
+    logger.info("Kitchen service shutting down...")
 
 app = FastAPI(title="Kitchen service", lifespan=lifespan)
 
