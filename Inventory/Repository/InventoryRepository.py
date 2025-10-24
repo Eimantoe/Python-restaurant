@@ -1,5 +1,8 @@
 import aiosqlite
+import asyncio
 from typing import Any, Dict, List
+
+from fastapi.concurrency import asynccontextmanager
 from Shared.Logging import logger
 import os
 import sys
@@ -12,15 +15,22 @@ class InventoryRepository:
     _BASE_DIR = Path(__file__).resolve().parent
     _DB_PATH = os.path.join(_BASE_DIR, 'kitchen.db')
     
-    def __init__(self):
-        self._pool = None
+    def __init__(self, pool_size: int = 10):
+        self._pool : asyncio.Queue[aiosqlite.Connection] = asyncio.Queue(maxsize=pool_size)
+        self._pool_size = pool_size
+        self._closed = False
 
     async def initialize_pool(self):
+
+        """Verify database exists and is accessible."""
+        if not os.path.exists(self._DB_PATH):
+            raise FileNotFoundError(f"Database not found: {self._DB_PATH}")
+        
         """Asynchronously initializes the database connection pool."""
-        self._pool = await aiosqlite.connect(
-            self._DB_PATH, 
-            check_same_thread=False
-        )
+        for _ in range(self._pool_size):
+            conn = await aiosqlite.connect(self._DB_PATH)
+            await self._pool.put(conn)
+
         logger.info("Database connection pool initialized")
 
     def get_connection(self):
@@ -29,11 +39,26 @@ class InventoryRepository:
             raise Exception("Database connection pool is not initialized.")
         return self._pool
     
+    @asynccontextmanager
+    async def get_connection(self) -> aiosqlite.Connection:
+
+        if self._closed:
+            raise Exception("Database connection pool is closed.")
+        
+        """Asynchronously gets a connection from the pool."""
+        conn = await self._pool.get()
+        try:
+            yield conn
+        finally:
+            if not self._closed:
+                await self._pool.put(conn)
+
     async def close_pool(self):
         """Asynchronously closes the database connection pool."""
-        if self._pool:
-            await self._pool.close()
-            logger.info("Database connection pool closed")
+        for _ in range(self._pool_size):
+            conn = await self._pool.get()
+            await conn.close()
+            logger.info("Database connection closed")
 
     async def get_menu_items(self) -> List[Dict[str, str]]:
         """Asynchronously gets all menu items from the recipes table."""
