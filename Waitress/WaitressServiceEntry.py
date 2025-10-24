@@ -11,35 +11,39 @@ from Waitress.WaitressServiceModel import Menu
 from Shared.Settings import settings
 import time
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from Waitress.WaitressServiceLogic import WaitressServiceLogic
 from Shared.RedisService import redis_service
 
 from Shared.Logging import logger
+from Shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
 
 service_logic = WaitressServiceLogic()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):   
-    logger.info("Waitress service starting up...")
+
+    logger.info("########################################################################")
+    logger.info("##              Waitress service starting up...                       ##")
+    logger.info("########################################################################")
+
+    await startup_http_client()
+    await startup_redis()
 
     await service_logic.get_menu()
 
     yield
 
-    logger.info("Waitress service shutting down...")
+    await shutdown_http_client()
+    await shutdown_redis()
+
+    logger.info("########################################################################")
+    logger.info("##              Waitress service shutting down...                     ##")
+    logger.info("########################################################################")
 
 app = FastAPI(title="Waitress service", lifespan=lifespan)
 
-@app.middleware("http")
-async def add_process_time_header(request, call_next):
-    start_time = time.perf_counter()
-    response = await call_next(request)
-    process_time = time.perf_counter() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
-
-@app.get("/menu", response_model=Menu)
+@app.get("/menu", response_model=Menu, status_code=status.HTTP_200_OK)
 async def show_menu():
 
     logger.info("Menu endpoint called")
@@ -61,7 +65,7 @@ async def show_menu():
         else:
             return Menu(items=[])
 
-@app.post("/place-order", response_model=PlaceOrderResponse)
+@app.post("/place-order", response_model=PlaceOrderResponse, status_code=status.HTTP_201_CREATED)
 async def place_order(orders: PlaceOrderRequest):
     logger.info("Order placed", orders=orders)
 
@@ -71,14 +75,12 @@ async def place_order(orders: PlaceOrderRequest):
 
     return PlaceOrderResponse(order_id=orderPlacedEvent.order_id)
 
-@app.get("/consume-kitchen-order", response_model=KitchenOrderResponse)
+@app.get("/consume-kitchen-order", response_model=KitchenOrderResponse, status_code=status.HTTP_200_OK)
 async def consume_kitchen_order():
 
     logger.info("Consuming kitchen order")
 
     kitchen_base_event = await service_logic.consume_kitchen_order()
-
-    status = ""
 
     if kitchen_base_event:
         if isinstance(kitchen_base_event, OrderReady):

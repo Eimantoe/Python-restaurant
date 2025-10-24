@@ -6,6 +6,7 @@ from Shared.RedisService import redis_service
 from Events.Events import OrderCanceled, OrderPlaced, OrderReady
 import httpx
 from Shared.APIRequest import APIRequest
+from pydantic import BaseModel
 
 class WaitressServiceLogic:
 
@@ -17,17 +18,15 @@ class WaitressServiceLogic:
 
         api_request = APIRequest(APIRequest.Method.GET, URL)
 
-        response = await api_request.sendRequest()
-
-        if response:
+        try:
+            response = await api_request.sendRequest()
             result = Menu.model_validate(response.json())
-
             logger.info("Menu items fetched successfully", menu_items=result)
             await redis_service.set_menu_cache(result)
             return  # Exit the function if successful
-        else:
-            logger.error("Failed to fetch menu items after retries")
-            raise Exception("Failed to fetch menu items from Inventory Service")
+        except httpx.HTTPError as e:
+            logger.error("API request failed permanently", error=str(e))
+            raise Exception("Inventory service unavailable") from e
 
 
 

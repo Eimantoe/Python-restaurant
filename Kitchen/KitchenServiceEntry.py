@@ -2,22 +2,27 @@ import asyncio
 import os
 import sys
 
+from Shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import time
 
 from contextlib import asynccontextmanager
 from .KitchenServiceLogic import KitchenServiceLogic
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 
 from Shared.Logging import logger
-
-kitchen_service_logic = KitchenServiceLogic()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    logger.info("Starting kitchen service...")
+    logger.info("########################################################################")
+    logger.info("##              Waitress service is starting up...                    ##")
+    logger.info("########################################################################")
+
+    await startup_http_client()
+    await startup_redis()
 
     # Use the async factory to create the instance
     kitchen_service_logic = await KitchenServiceLogic.create()  
@@ -26,14 +31,11 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    logger.info("Kitchen service shutting down...")
+    await shutdown_http_client()
+    await shutdown_redis()
+
+    logger.info("########################################################################")
+    logger.info("##              Kitchen service shutting down...                      ##")
+    logger.info("########################################################################")
 
 app = FastAPI(title="Kitchen service", lifespan=lifespan)
-
-@app.middleware("http")
-async def add_process_time_header(request, call_next):
-    start_time = time.perf_counter()
-    response = await call_next(request)
-    process_time = time.perf_counter() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response

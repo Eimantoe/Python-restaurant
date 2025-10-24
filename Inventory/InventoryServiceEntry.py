@@ -7,35 +7,36 @@ from Kitchen.KitchenServiceLogic import KitchenServiceLogic
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, status, HTTPException
 from .InventoryServiceLogic import InventoryServiceLogic
 from .InventoryServiceModel import CheckRecipeForIngredientsRequest, CheckRecipeForIngredientsResponse, ConsumeIngridientsRequest, ConsumeIngridientsResponse, ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, Menu
 from Shared.Logging import logger
-
-import time
+from Shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    logger.info("Starting inventory service...")
+    logger.info("########################################################################")
+    logger.info("##             Inventory service starting up...                       ##")
+    logger.info("########################################################################")
     
+    await startup_http_client()
+    await startup_redis()
+
     yield
 
-    logger.info("Inventory service shutting down...")
+    await shutdown_http_client()
+    await shutdown_redis()
+
+    logger.info("########################################################################")
+    logger.info("##              Inventory service shutting down...                    ##")
+    logger.info("########################################################################")
 
 app = FastAPI(title="Kitchen inventory service", lifespan=lifespan)
 
 inventory_service = InventoryServiceLogic()
 
-@app.middleware("http")
-async def add_process_time_header(request, call_next):
-    start_time = time.perf_counter()
-    response = await call_next(request)
-    process_time = time.perf_counter() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
-
-@app.post("/checkRecipeForIngredients", response_model=CheckRecipeForIngredientsResponse)
+@app.post("/checkRecipeForIngredients", response_model=CheckRecipeForIngredientsResponse, status_code=status.HTTP_200_OK)
 async def check_recipe_for_ingredients(request: CheckRecipeForIngredientsRequest):
     try:
 
@@ -50,7 +51,7 @@ async def check_recipe_for_ingredients(request: CheckRecipeForIngredientsRequest
         logger.error("Error in check_recipe_for_ingredients", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.post("/consumeRecipeIngridients", response_model=ConsumeRecipeIngridientsResponse)
+@app.post("/consumeRecipeIngridients", response_model=ConsumeRecipeIngridientsResponse, status_code=status.HTTP_200_OK)
 async def consume_recipe_ingredients(request: ConsumeRecipeIngridientsRequest):
     try:
 
@@ -65,7 +66,7 @@ async def consume_recipe_ingredients(request: ConsumeRecipeIngridientsRequest):
         logger.error("Error in consume_recipe_ingredients", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/menu", response_model=Menu)
+@app.get("/menu", response_model=Menu, status_code=status.HTTP_200_OK)
 async def get_menu_items():
 
     logger.info("get_menu_items called")
