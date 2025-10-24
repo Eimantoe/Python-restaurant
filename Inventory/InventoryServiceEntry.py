@@ -76,3 +76,33 @@ async def get_menu_items():
     logger.info("get_menu_items results", menu_items=menu_items)
 
     return menu_items
+
+@app.post("/admin/clear-menu-cache")
+async def clear_menu_cache():
+    from Shared.RedisService import redis_service
+    await redis_service.client.delete(redis_service.MENU_CACHE_KEY)
+    logger.info("{redis_service.MENU_CACHE_KEY} has been cleared.")
+    return {"status" : "success"}
+
+@app.get("/admin/cache-status", status_code=status.HTTP_200_OK)
+async def cache_status():
+    from Shared.RedisService import redis_service
+    
+    exists = redis_service.client.exists(redis_service.MENU_CACHE_KEY)
+
+    if exists:
+        ttl = await redis_service.client.ttl(redis_service.MENU_CACHE_KEY)
+        cached_data = await redis_service.client.get(redis_service.MENU_CACHE_KEY)
+
+        return {
+            "exists": True,
+            "ttl": ttl,
+            "cached_data": cached_data
+        }
+    else:
+
+        logger.info("Menu cache does not exist.")
+        return {
+            "exists": False
+        }
+        

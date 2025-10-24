@@ -56,8 +56,6 @@ class RedisService:
     async def get_menu_cache(self) -> Optional[Menu]:
         cached_menu = await self.client.get(self.MENU_CACHE_KEY)
 
-
-
         if not cached_menu :
             return None
 

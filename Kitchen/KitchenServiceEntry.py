@@ -18,7 +18,7 @@ from Shared.Logging import logger
 async def lifespan(app: FastAPI):
 
     logger.info("########################################################################")
-    logger.info("##              Waitress service is starting up...                    ##")
+    logger.info("##              Kitchen service is starting up...                     ##")
     logger.info("########################################################################")
 
     await startup_http_client()
