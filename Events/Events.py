@@ -37,6 +37,12 @@ class OrderPlaced(BaseEvent):
             data['items'] = json.loads(data['items'])
         return cls.model_validate(data)
 
+class DeadEvent(BaseEvent):
+    event_type: Literal['DeadEvent'] = 'DeadEvent'
+    message_id: str
+    original_message: str
+    error: str
+
 class KitchenBaseEvent(BaseEvent):
     pass
 
@@ -45,4 +51,5 @@ class OrderCanceled(KitchenBaseEvent):
 
 class OrderReady(KitchenBaseEvent):
     event_type: Literal['OrderReady'] = 'OrderReady'
+
     

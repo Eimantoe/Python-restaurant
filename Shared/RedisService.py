@@ -13,6 +13,7 @@ class RedisService:
     
     WAITRESS_ORDER_EVENTS       = "waitress_order_events"
     KITCHEN_ORDER_EVENTS        = "kitchen_order_events"
+    DEAD_EVENT_QUEUE            = "dead_event_queue"
 
     KITCHEN_LAST_MESSAGE_ID_KEY   = "kitchen_last_message_id"
     WAITRESS_LAST_MESSAGE_ID_KEY  = "waitress_last_message_id"
@@ -31,6 +32,9 @@ class RedisService:
 
     async def publish_kitchen_order_event(self, base_event: BaseEvent):
         await self._publish_event(self.KITCHEN_ORDER_EVENTS, base_event)
+
+    async def publish_error_event(self, base_event: BaseEvent):
+        await self._publish_event(self.DEAD_EVENT_QUEUE, base_event)
 
     async def consume_kitchen_order_event(self, last_id: str = '0-0'):
         return await self._consume_event(self.KITCHEN_ORDER_EVENTS, last_id)

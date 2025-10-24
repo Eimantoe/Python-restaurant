@@ -3,6 +3,7 @@ import asyncio
 from typing import Any, Dict, List
 
 from fastapi.concurrency import asynccontextmanager
+from fastapi import HTTPException as HttpException
 from Shared.Logging import logger
 import os
 import sys
@@ -45,8 +46,13 @@ class InventoryRepository:
         if self._closed:
             raise Exception("Database connection pool is closed.")
         
-        """Asynchronously gets a connection from the pool."""
-        conn = await self._pool.get()
+        try:
+
+            """Asynchronously gets a connection from the pool."""
+            conn = await asyncio.wait_for(self._pool.get(), timeout=5.0)
+        except TimeoutError:
+            raise HttpException(503, "Timeout while waiting for a database connection.")
+
         try:
             yield conn
         finally:
@@ -119,29 +125,34 @@ class InventoryRepository:
         Asynchronously consumes all ingredients for a recipe in a single database transaction.
         If any ingredient consumption fails, the entire transaction is rolled back.
         """
-        recipe_ingridients = await self.get_recipe_ingridients_by_name(recipe_name)
-
-        if not recipe_ingridients:
-            logger.warning("Recipe not found when trying to consume ingredients", recipe_name=recipe_name)
-            return (False, "Recipe not found")
 
         async with self.get_connection() as conn:
-            try:
-                # Start a transaction
-                await conn.execute("BEGIN")
+            # Start a transaction
+            await conn.execute("BEGIN")
 
-                for ingridient in recipe_ingridients:
-                    required_qty = ingridient['requiredQty'] * qty
-                    success = await self.consume_ingridient(conn, ingridient['name'], required_qty)
-                    if not success:
-                        # If any ingredient fails, roll back and return False
-                        await conn.rollback()
-                        return (False, "Failed to consume ingredients")
+            recipe_ingridients = await self.get_recipe_ingridients_by_name(recipe_name)
 
-                # If all ingredients are consumed successfully, commit the transaction
-                await conn.commit()
-                return (True, "Ingredients consumed successfully")
-            except Exception:
-                # Rollback on any other exception
-                await conn.rollback()
-                return (False, "Failed to consume ingredients")
+            if not recipe_ingridients:
+                logger.warning("Recipe not found when trying to consume ingredients", recipe_name=recipe_name)
+                return (False, "Recipe not found")
+
+            for ingredient in recipe_ingridients:
+
+                # SELECTING FOR AN UPDATE LOCKS THE TABLE
+                cursor = await conn.execute("SELECT qty FROM supplies WHERE name = ?", (ingredient['name'],))
+                
+                current_qty_row = (await cursor.fetchone())[0]
+                required_qty = ingredient['requiredQty'] * qty
+
+                if current_qty_row < required_qty:
+                    # Not enough quantity, roll back and return False
+                    await conn.rollback()
+                    logger.warning("Insufficient ingredient quantity when trying to consume", recipe_name=recipe_name, ingredient=ingredient['name'], required_qty=required_qty, available_qty=current_qty_row)
+                    return (False, f"Insufficient quantity for ingredient: {ingredient['name']}")
+
+            for ingredient in recipe_ingridients:
+                await self.consume_ingridient(conn, ingredient['name'], required_qty)
+
+            # If all ingredients are consumed successfully, commit the transaction
+            await conn.commit()
+            return (True, "Ingredients consumed successfully")

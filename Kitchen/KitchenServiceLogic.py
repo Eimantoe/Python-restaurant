@@ -1,7 +1,8 @@
 import asyncio
+import json
 import traceback
 import redis
-from Events.Events import OrderCanceled, OrderPlaced, OrderReady
+from Events.Events import DeadEvent, OrderCanceled, OrderPlaced, OrderReady
 from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask
 from Shared.RedisService import redis_service
 from Shared.Settings import settings
@@ -37,15 +38,40 @@ class KitchenServiceLogic:
 
                 logger.info("Consumed waitress order event", message_id=message_id, message_data=message_data)
 
-                self.last_waitress_message_id = message_id # type: ignore
-                await self.process_message(message_data)
+                try:
 
-                await redis_service.set_last_waitress_message_id(self.last_waitress_message_id)
+                    await self.process_message(message_data)
+                    self.last_waitress_message_id = message_id # type: ignore
+                    await redis_service.set_last_waitress_message_id(self.last_waitress_message_id)
+                except Exception as e:
+                    logger.error("Error processing waitress order event", error=str(e))
+                    self.handle_processing_failure(message_id, message_data, e)
+            
             except redis.ConnectionError as e:
                 logger.error("Redis connection error", error=str(e))
+                await asyncio.sleep(5)  # Wait before retrying
             except Exception as e:
                 logger.error("Error processing waitress order event", error=str(e))
                 logger.error(traceback.format_exc())
+
+    async def handle_processing_failure(self, message_id, message_data, error):
+        retry_count = await redis_service.client.hincrby(f"retry:{message_id}", "count", 1)
+        
+        if retry_count > 3:
+            # Move to DLQ
+            await redis_service.publish_error_event(DeadEvent(
+                order_id=int(message_data.get('order_id', 0)),
+                table_no=int(message_data.get('table_no', 0)),
+                comments="Moved to DLQ after exceeding retry limit",
+                message_id=message_id,
+                original_message=json.dumps(message_data),
+                error=str(error)
+            ))
+            logger.error("Message moved to DLQ", message_id=message_id)
+            self.last_waitress_message_id = message_id
+            await redis_service.set_last_waitress_message_id(message_id)
+        else:
+            await asyncio.sleep(2 ** retry_count)  
 
     async def process_message(self, message_data):
         match message_data.get('event_type'):
