@@ -13,6 +13,9 @@ from .InventoryServiceModel import CheckRecipeForIngredientsRequest, CheckRecipe
 from Shared.Logging import logger
 from Shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
 
+
+inventory_service = InventoryServiceLogic()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
@@ -22,11 +25,13 @@ async def lifespan(app: FastAPI):
     
     await startup_http_client()
     await startup_redis()
+    await inventory_service.initialize_service()
 
     yield
 
     await shutdown_http_client()
     await shutdown_redis()
+    await inventory_service.shutdown_service()
 
     logger.info("########################################################################")
     logger.info("##              Inventory service shutting down...                    ##")
@@ -34,7 +39,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Kitchen inventory service", lifespan=lifespan)
 
-inventory_service = InventoryServiceLogic()
 
 @app.post("/checkRecipeForIngredients", response_model=CheckRecipeForIngredientsResponse, status_code=status.HTTP_200_OK)
 async def check_recipe_for_ingredients(request: CheckRecipeForIngredientsRequest):

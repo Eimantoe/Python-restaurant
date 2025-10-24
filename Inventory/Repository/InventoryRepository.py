@@ -3,16 +3,37 @@ from typing import Any, Dict, List
 from Shared.Logging import logger
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class InventoryRepository:
 
-    db_path = "Inventory/Repository/kitchen.db"
-     
+    _BASE_DIR = Path(__file__).resolve().parent
+    _DB_PATH = os.path.join(_BASE_DIR, 'kitchen.db')
+    
+    def __init__(self):
+        self._pool = None
+
+    async def initialize_pool(self):
+        """Asynchronously initializes the database connection pool."""
+        self._pool = await aiosqlite.connect(
+            self._DB_PATH, 
+            check_same_thread=False
+        )
+        logger.info("Database connection pool initialized")
+
     def get_connection(self):
         """Asynchronously gets a connection to the SQLite database."""
-        return aiosqlite.connect(self.db_path)
+        if not self._pool:
+            raise Exception("Database connection pool is not initialized.")
+        return self._pool
+    
+    async def close_pool(self):
+        """Asynchronously closes the database connection pool."""
+        if self._pool:
+            await self._pool.close()
+            logger.info("Database connection pool closed")
 
     async def get_menu_items(self) -> List[Dict[str, str]]:
         """Asynchronously gets all menu items from the recipes table."""

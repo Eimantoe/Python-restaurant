@@ -11,6 +11,17 @@ class InventoryServiceLogic:
     def __init__(self):
         self.inventory_repository = InventoryRepository()
 
+
+    async def initialize_service(self):
+        """Initializes the inventory service by setting up the database connection pool."""
+        await self.inventory_repository.initialize_pool()
+        logger.info("Inventory service initialized")
+
+    async def shutdown_service(self):
+        """Shuts down the inventory service by closing the database connection pool."""
+        await self.inventory_repository.close_pool()
+        logger.info("Inventory service shut down")
+
     # This method checks if a recipe can be made with the available ingredients
     # It takes a CheckRecipeForIngredientsTask as input and returns a CheckRecipeForIngredientsResult
     # If the recipe exists and all ingredients are available in the required quantities, it returns
