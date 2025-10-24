@@ -38,23 +38,17 @@ class APIRequest:
 
         logger.info("Sending API request", method=self.method, url=self.url, payload=self.payload)
 
-        try:
-            client = http_client_manager.client
-        
-            if self.method == self.Method.GET:
-                response = await client.get(self.url)
-            elif self.method == self.Method.POST:
-                response = await client.post(self.url, json=self.payload)
-            else:
-                logger.error("Unsupported HTTP method", method=self.method)
-                raise ValueError(f"Unsupported HTTP method: {self.method}")
+        client = http_client_manager.client
+    
+        if self.method == self.Method.GET:
+            response = await client.get(self.url)
+        elif self.method == self.Method.POST:
+            response = await client.post(self.url, json=self.payload)
+        else:
+            logger.error("Unsupported HTTP method", method=self.method)
+            raise ValueError(f"Unsupported HTTP method: {self.method}")
 
-            response.raise_for_status()  # Raise an error for bad responses
+        response.raise_for_status()  # Raise an error for bad responses
 
-            logger.info("API request successful", status_code=response.status_code, response=response.json())
-            return response
-
-        except httpx.RequestError as e:
-            logger.error("Request error occurred", error=str(e))
-        except httpx.HTTPStatusError as e:
-            logger.error("HTTP status error occurred", status_code=e.response.status_code, error=str(e))
+        logger.info("API request successful", status_code=response.status_code, response=response.json())
+        return response

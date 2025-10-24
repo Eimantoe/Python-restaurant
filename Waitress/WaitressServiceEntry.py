@@ -53,7 +53,7 @@ async def show_menu():
     logger.info("Menu items cache retrieved", menu_items=menu_items)
 
     if menu_items:
-        return Menu(items=menu_items)
+        return menu_items
     else:
         await service_logic.get_menu()
         menu_items = await redis_service.get_menu_cache()
@@ -61,7 +61,7 @@ async def show_menu():
         logger.info("Menu items cache retrieved after fetching from inventory service", menu_items=menu_items)
         
         if menu_items:
-            return Menu(items=menu_items)
+            return menu_items
         else:
             return Menu(items=[])
 

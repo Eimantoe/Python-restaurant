@@ -79,7 +79,7 @@ class InventoryServiceLogic:
 
         logger.info("get_menu_items result", menu_items=menu_result)
 
-        menu = Menu(items=[MenuItem(name=item.get("Name"), description=item.get("Description")) for item in menu_result]) # type: ignore
+        menu = Menu(items=[MenuItem(name=item.get("name"), description=item.get("description")) for item in menu_result]) # type: ignore
 
         return menu
 

@@ -12,7 +12,7 @@ class HTTPClientManager:
         )
 
     async def stop(self):
-        self._client.aclose()
+        await self._client.aclose()
 
     @property
     def client(self) -> httpx.AsyncClient:

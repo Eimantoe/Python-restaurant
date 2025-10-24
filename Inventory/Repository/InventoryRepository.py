@@ -1,12 +1,17 @@
 import aiosqlite
 from typing import Any, Dict, List
 from Shared.Logging import logger
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class InventoryRepository:
 
-    db_path = "./Inventory/Repository/kitchen.db"
-    
+    db_path = "Inventory/Repository/kitchen.db"
+     
     def get_connection(self):
+        """Asynchronously gets a connection to the SQLite database."""
         return aiosqlite.connect(self.db_path)
 
     async def get_menu_items(self) -> List[Dict[str, str]]:
@@ -15,7 +20,14 @@ class InventoryRepository:
             conn.row_factory = aiosqlite.Row
             async with conn.execute("SELECT name, description FROM recipes") as cursor:
                 rows = await cursor.fetchall()
-                return [dict(row) for row in rows]
+
+                logger.info("Menu items fetched from database", item_count=len(rows))
+
+                result = [dict(row) for row in rows]
+
+                logger.info("Menu items formatted", result=result)
+
+                return result
 
     async def check_ingridients_for_recipe(self, recipe_name: str, qty: int = 1) -> bool:
         """Asynchronously checks if all ingredients for a recipe are available."""
@@ -25,8 +37,8 @@ class InventoryRepository:
             return False
 
         for ingridient in recipe_ingridients:
-            required_qty = ingridient['RequiredQty'] * qty
-            if not await self.check_ingridient_availability(ingridient['Name'], required_qty):
+            required_qty = ingridient['requiredQty'] * qty
+            if not await self.check_ingridient_availability(ingridient['name'], required_qty):
                 return False
 
         return True
@@ -35,7 +47,7 @@ class InventoryRepository:
         """Asynchronously gets the ingredients for a specific recipe by its name."""
         async with self.get_connection() as conn:
             conn.row_factory = aiosqlite.Row
-            async with conn.execute("SELECT Name, RequiredQty FROM recipeingridient WHERE recipe = ?", (recipe_name,)) as cursor:
+            async with conn.execute("SELECT name, requiredQty FROM recipeingridient WHERE recipe = ?", (recipe_name,)) as cursor:
                 rows = await cursor.fetchall()
                 return [dict(row) for row in rows]
 
@@ -73,8 +85,8 @@ class InventoryRepository:
                 await conn.execute("BEGIN")
 
                 for ingridient in recipe_ingridients:
-                    required_qty = ingridient['RequiredQty'] * qty
-                    success = await self.consume_ingridient(conn, ingridient['Name'], required_qty)
+                    required_qty = ingridient['requiredQty'] * qty
+                    success = await self.consume_ingridient(conn, ingridient['name'], required_qty)
                     if not success:
                         # If any ingredient fails, roll back and return False
                         await conn.rollback()
