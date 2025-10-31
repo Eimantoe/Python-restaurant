@@ -23,7 +23,7 @@
       "args": [
         "Kitchen.KitchenServiceEntry:app",
         "--reload",
-        "--port", "7000"
+        "--port", "7001"
       ],
       "jinja": true,
       "justMyCode": false,

@@ -1,5 +1,6 @@
-from RedisService import redis_service
-from HTTPClientManager import http_client_manager
+from kitchen_commons.shared.RedisService import redis_service
+from kitchen_commons.shared.HTTPClientManager import http_client_manager
+
 from Logging import logger
 
 async def startup_http_client():

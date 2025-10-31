@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 
 from fastapi.concurrency import asynccontextmanager
 from fastapi import HTTPException as HttpException
-from Shared.Logging import logger
+from kitchen_commons.shared.Logging import logger
 import os
 import sys
 from pathlib import Path

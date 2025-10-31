@@ -46,7 +46,7 @@ services:
       dockerfile: kitchen_service/Dockerfile
     container_name: kitchen-kitchen
     ports:
-      - "7000:7000"
+      - "7001:7000"
     environment:
       - DEBUG_MODE=${DEBUG_MODE:-false}
       - REDIS_HOST=redis

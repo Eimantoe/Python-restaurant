@@ -1,8 +1,8 @@
 import asyncio
 from enum import Enum
 from typing import Any
-from shared.Logging import logger
-from shared.HTTPClientManager import http_client_manager
+from kitchen_commons.shared.Logging import logger
+from kitchen_commons.shared.HTTPClientManager import http_client_manager
 import httpx
 import logging
 from tenacity import (
