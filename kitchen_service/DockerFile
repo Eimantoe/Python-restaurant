@@ -1,0 +1,20 @@
+# Kitchen/Dockerfile
+FROM python:3.14-slim
+
+WORKDIR /app
+
+# Install shared package
+COPY kitchen-commons/ /tmp/kitchen-commons/
+RUN pip install --no-cache-dir /tmp/kitchen-commons && \
+    rm -rf /tmp/kitchen-commons
+
+# Install service dependencies
+COPY kitchen_service/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy service code
+COPY kitchen_service/ ./kitchen_service/
+
+EXPOSE 7000
+
+CMD ["uvicorn", "kitchen_service.KitchenServiceEntry:app", "--host", "0.0.0.0", "--port", "7000"]

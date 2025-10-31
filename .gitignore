@@ -1,1 +1,20 @@
+# .gitignore
 __pycache__/
+*.pyc
+*.pyo
+*.db
+*.db-journal
+.venv/
+venv/
+.env.production
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp

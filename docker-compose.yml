@@ -1,0 +1,97 @@
+# docker-compose.yml
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: kitchen-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - kitchen-network
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: inventory_service/Dockerfile
+    container_name: kitchen-inventory
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - INVENTORY_SERVICE_URL=http://inventory-service:8000
+      - KITCHEN_SERVICE_URL=http://kitchen-service:7000
+      - WAITRESS_SERVICE_URL=http://waitress-service:6000
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./inventory_service/Repository/kitchen.db:/app/inventory_service/Repository/kitchen.db
+    restart: unless-stopped
+    networks:
+      - kitchen-network
+
+  kitchen-service:
+    build:
+      context: .
+      dockerfile: kitchen_service/Dockerfile
+    container_name: kitchen-kitchen
+    ports:
+      - "7000:7000"
+    environment:
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - INVENTORY_SERVICE_URL=http://inventory-service:8000
+      - KITCHEN_SERVICE_URL=http://kitchen-service:7000
+      - WAITRESS_SERVICE_URL=http://waitress-service:6000
+    depends_on:
+      redis:
+        condition: service_healthy
+      inventory-service:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - kitchen-network
+
+  waitress-service:
+    build:
+      context: .
+      dockerfile: waitress_service/Dockerfile
+    container_name: kitchen-waitress
+    ports:
+      - "6000:6000"
+    environment:
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - INVENTORY_SERVICE_URL=http://inventory-service:8000
+      - KITCHEN_SERVICE_URL=http://kitchen-service:7000
+      - WAITRESS_SERVICE_URL=http://waitress-service:6000
+    depends_on:
+      redis:
+        condition: service_healthy
+      kitchen-service:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - kitchen-network
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  kitchen-network:
+    driver: bridge

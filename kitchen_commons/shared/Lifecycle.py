@@ -1,6 +1,6 @@
-from .RedisService import redis_service
-from .HTTPClientManager import http_client_manager
-from .Logging import logger
+from RedisService import redis_service
+from HTTPClientManager import http_client_manager
+from Logging import logger
 
 async def startup_http_client():
     logger.info("Starting http client manager...")

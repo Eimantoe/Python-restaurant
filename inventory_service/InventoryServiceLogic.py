@@ -1,6 +1,7 @@
-from .InventoryServiceModel import CheckRecipeForIngredientsTask, CheckRecipeForIngredientsResult, ConsumeIngridientsTask, ConsumeIngridientsResult, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult, Menu, MenuItem
+
+from kitchen_commons.models.InventoryServiceModel import CheckRecipeForIngredientsTask, CheckRecipeForIngredientsResult, ConsumeIngridientsTask, ConsumeIngridientsResult, ConsumeRecipeIngridientsTask, ConsumeRecipeIngridientsResult, Menu, MenuItem
 from .Repository.InventoryRepository import InventoryRepository
-from Shared.Logging import logger
+from kitchen_commons.shared.Logging import logger
 
 
 class InventoryServiceLogic:

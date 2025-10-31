@@ -1,7 +1,7 @@
 import logging
 import sys
 import structlog
-from Shared.Settings import settings
+from kitchen_commons.shared.Settings import settings
 
 def configure_logging(is_dev_mode=True):
     """

@@ -1,12 +1,15 @@
 import asyncio
-from Shared.Settings import settings
-from Shared.Logging import logger
-from .WaitressServiceModel import Menu
-from Shared.RedisService import redis_service
-from Events.Events import OrderCanceled, OrderPlaced, OrderReady
 import httpx
-from Shared.APIRequest import APIRequest
+
 from pydantic import BaseModel
+
+from kitchen_commons.models.WaitressServiceModel import Menu
+from kitchen_commons.shared.Settings import settings
+from kitchen_commons.shared.Logging import logger
+from kitchen_commons.shared.RedisService import redis_service
+from kitchen_commons.events.Events import OrderCanceled, OrderPlaced, OrderReady
+from kitchen_commons.shared.APIRequest import APIRequest
+
 
 class WaitressServiceLogic:
 

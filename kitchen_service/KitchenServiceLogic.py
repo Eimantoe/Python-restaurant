@@ -2,14 +2,14 @@ import asyncio
 import json
 import traceback
 import redis
-from Events.Events import DeadEvent, OrderCanceled, OrderPlaced, OrderReady
-from Inventory.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask
-from Shared.RedisService import redis_service
-from Shared.Settings import settings
-from Shared.Logging import logger
-from Shared.APIRequest import APIRequest
-import httpx
 
+from kitchen_commons.events.Events import DeadEvent, OrderCanceled, OrderPlaced, OrderReady
+from kitchen_commons.models.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask
+
+from kitchen_commons.shared.RedisService import redis_service
+from kitchen_commons.shared.Settings import settings
+from kitchen_commons.shared.Logging import logger
+from kitchen_commons.shared.APIRequest import APIRequest
 
 class KitchenServiceLogic:
     

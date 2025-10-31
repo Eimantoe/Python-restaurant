@@ -1,22 +1,18 @@
 from contextlib import asynccontextmanager
-from Events.Events import OrderCanceled, OrderPlaced, OrderReady
-from .WaitressServiceModel import KitchenOrderResponse, PlaceOrderRequest, PlaceOrderResponse
 
-import os
-import sys
+from kitchen_commons.events.Events import OrderCanceled, OrderPlaced, OrderReady
+from kitchen_commons.models.WaitressServiceModel import KitchenOrderResponse, PlaceOrderRequest, PlaceOrderResponse, Menu
+from kitchen_commons.shared.Settings import settings
+from kitchen_commons.shared.Logging import logger
+from kitchen_commons.shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
+from kitchen_commons.shared.RedisService import redis_service   
+#import os
+#import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from Waitress.WaitressServiceModel import Menu
-from Shared.Settings import settings
-import time
+#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, HTTPException, status
-from Waitress.WaitressServiceLogic import WaitressServiceLogic
-from Shared.RedisService import redis_service
-
-from Shared.Logging import logger
-from Shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
+from waitress_service.WaitressServiceLogic import WaitressServiceLogic
 
 service_logic = WaitressServiceLogic()
 

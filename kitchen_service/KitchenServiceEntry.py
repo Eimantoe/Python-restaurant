@@ -2,17 +2,17 @@ import asyncio
 import os
 import sys
 
-from Shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
+from kitchen_commons.shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import time
 
 from contextlib import asynccontextmanager
 from .KitchenServiceLogic import KitchenServiceLogic
+
 from fastapi import FastAPI, status
 
-from Shared.Logging import logger
+from kitchen_commons.shared.Logging import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

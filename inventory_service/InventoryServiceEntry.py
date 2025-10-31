@@ -3,16 +3,16 @@ from contextlib import asynccontextmanager
 import sys
 import os
 
-from Kitchen.KitchenServiceLogic import KitchenServiceLogic
+#from kitchen_service.KitchenServiceLogic import KitchenServiceLogic
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, status, HTTPException
 from .InventoryServiceLogic import InventoryServiceLogic
-from .InventoryServiceModel import CheckRecipeForIngredientsRequest, CheckRecipeForIngredientsResponse, ConsumeIngridientsRequest, ConsumeIngridientsResponse, ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, Menu
-from Shared.Logging import logger
-from Shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
-
+from kitchen_commons.models.InventoryServiceModel import CheckRecipeForIngredientsRequest, CheckRecipeForIngredientsResponse, ConsumeIngridientsRequest, ConsumeIngridientsResponse, ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, Menu
+from kitchen_commons.shared.Logging import logger
+from kitchen_commons.shared.Lifecycle import startup_http_client, shutdown_http_client, startup_redis, shutdown_redis
+from kitchen_commons.shared.RedisService import redis_service
 
 inventory_service = InventoryServiceLogic()
 
@@ -83,15 +83,12 @@ async def get_menu_items():
 
 @app.post("/admin/clear-menu-cache")
 async def clear_menu_cache():
-    from Shared.RedisService import redis_service
     await redis_service.client.delete(redis_service.MENU_CACHE_KEY)
     logger.info(f"{redis_service.MENU_CACHE_KEY} has been cleared.")
     return {"status" : "success"}
 
 @app.get("/admin/cache-status", status_code=status.HTTP_200_OK)
 async def cache_status():
-    from Shared.RedisService import redis_service
-    
     exists = await redis_service.client.exists(redis_service.MENU_CACHE_KEY)
 
     if exists:

@@ -1,9 +1,9 @@
 from typing import Optional
 import redis.asyncio as redis
-from Events.Events import BaseEvent
-from Waitress.WaitressServiceModel import Menu
-from Shared.Settings import settings
-from Shared.Logging import logger
+from kitchen_commons.events.Events import BaseEvent
+from kitchen_commons.models.WaitressServiceModel import Menu
+from kitchen_commons.shared.Settings import settings
+from kitchen_commons.shared.Logging import logger
 
 class RedisService:
 
