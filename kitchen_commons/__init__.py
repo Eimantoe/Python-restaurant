@@ -48,7 +48,7 @@ from kitchen_commons.shared.Lifecycle import (
 )
 
 __all__ = [
-    "__version__"
+    "__version__",
     "DeadEvent",
     "OrderCanceled",
     "OrderPlaced",
