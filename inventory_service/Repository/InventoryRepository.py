@@ -1,6 +1,6 @@
 import aiosqlite
 import asyncio
-from typing import Any, Dict, List
+from typing import Any, AsyncIterator, Dict, List
 
 from fastapi.concurrency import asynccontextmanager
 from fastapi import HTTPException as HttpException
@@ -34,14 +34,14 @@ class InventoryRepository:
 
         logger.info("Database connection pool initialized")
 
-    def get_connection(self):
-        """Asynchronously gets a connection to the SQLite database."""
-        if not self._pool:
-            raise Exception("Database connection pool is not initialized.")
-        return self._pool
-    
+    #def get_connection(self):
+    #    """Asynchronously gets a connection to the SQLite database."""
+    #    if not self._pool:
+    #        raise Exception("Database connection pool is not initialized.")
+    #    return self._pool
+
     @asynccontextmanager
-    async def get_connection(self) -> aiosqlite.Connection:
+    async def get_connection(self) -> AsyncIterator[aiosqlite.Connection]:
 
         if self._closed:
             raise Exception("Database connection pool is closed.")
@@ -118,7 +118,11 @@ class InventoryRepository:
         Note: This method does not commit the transaction.
         """
         cursor = await conn.execute("UPDATE supplies SET qty = qty - ? WHERE name = ? AND qty >= ?", (qty, ingridient_name, qty))
-        return cursor.rowcount > 0
+
+        isUpdated = cursor.rowcount > 0
+
+        cursor.close()
+        return isUpdated
 
     async def consume_recipe_ingridients(self, recipe_name: str, qty: int) -> tuple[bool, str]:
         """
@@ -151,7 +155,7 @@ class InventoryRepository:
                     return (False, f"Insufficient quantity for ingredient: {ingredient['name']}")
 
             for ingredient in recipe_ingridients:
-                await self.consume_ingridient(conn, ingredient['name'], required_qty)
+                await self.consume_ingridient(conn, ingredient['name'], ingredient['requiredQty'] * qty)
 
             # If all ingredients are consumed successfully, commit the transaction
             await conn.commit()

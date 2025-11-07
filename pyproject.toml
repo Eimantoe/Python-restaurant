@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kitchen-commons"
-version = "0.1.0"
+version = "0.1.1"
 description = "Shared models, events, and utilities for Kitchen microservices"
-readme = "README.md"
+readme = "kitchen_commons/README.md"
 requires-python = ">=3.11"
 
 dependencies = [

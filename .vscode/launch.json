@@ -7,7 +7,7 @@
       "request": "launch",
       "module": "uvicorn",
       "args": [
-        "Inventory.InventoryServiceEntry:app",
+        "inventory_service.InventoryServiceEntry:app",
         "--reload",
         "--port", "8000"
       ],
@@ -21,7 +21,7 @@
       "request": "launch",
       "module": "uvicorn",
       "args": [
-        "Kitchen.KitchenServiceEntry:app",
+        "kitchen_service.KitchenServiceEntry:app",
         "--reload",
         "--port", "7001"
       ],
@@ -35,7 +35,7 @@
       "request": "launch",
       "module": "uvicorn",
       "args": [
-        "Waitress.WaitressServiceEntry:app",
+        "waitress_service.WaitressServiceEntry:app",
         "--reload",
         "--port", "6000"
       ],

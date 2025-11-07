@@ -5,7 +5,7 @@ class Settings(BaseSettings): # type: ignore
 
     inventory_service_url   : str = "http://localhost:8000"
     waitress_service_url    : str = "http://localhost:6000"
-    kitchen_service_url     : str = "http://localhost:7000"
+    kitchen_service_url     : str = "http://localhost:7001"
 
     redis_host: str = "localhost"
     redis_port: int = 6379
