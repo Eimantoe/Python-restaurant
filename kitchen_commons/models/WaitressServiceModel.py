@@ -25,5 +25,10 @@ class KitchenOrderResponse(BaseModel):
     status: str
     comments: str
 
+class OrderStatusResponse(BaseModel):
+    order_id: int
+    is_ready: bool
+    results: str
+
 
 

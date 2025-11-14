@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
+from typing import Dict
 
 from kitchen_commons.events.Events import OrderCanceled, OrderPlaced, OrderReady
-from kitchen_commons.models.WaitressServiceModel import KitchenOrderResponse, PlaceOrderRequest, PlaceOrderResponse, Menu
+from kitchen_commons.models.WaitressServiceModel import KitchenOrderResponse, OrderStatusResponse, PlaceOrderRequest, PlaceOrderResponse, Menu
 from kitchen_commons.shared.Settings import settings
 from kitchen_commons.shared.Logging import logger
 from kitchen_commons.shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
@@ -14,7 +15,7 @@ from kitchen_commons.shared.RedisService import redis_service
 from fastapi import FastAPI, HTTPException, status
 from waitress_service.WaitressServiceLogic import WaitressServiceLogic
 
-service_logic = WaitressServiceLogic()
+waitress_service_logic = WaitressServiceLogic()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):   
@@ -26,7 +27,7 @@ async def lifespan(app: FastAPI):
     await startup_http_client()
     await startup_redis()
 
-    await service_logic.get_menu()
+    await waitress_service_logic.get_menu()
 
     yield
 
@@ -51,7 +52,7 @@ async def show_menu():
     if menu_items:
         return menu_items
     else:
-        await service_logic.get_menu()
+        await waitress_service_logic.get_menu()
         menu_items = await redis_service.get_menu_cache()
 
         logger.info("Menu items cache retrieved after fetching from inventory service", menu_items=menu_items)
@@ -67,7 +68,7 @@ async def place_order(orders: PlaceOrderRequest):
 
     orderPlacedEvent = OrderPlaced(comments=orders.comments, table_no=orders.table_no, order_id= await redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
 
-    await service_logic.place_order(orderPlacedEvent)
+    await waitress_service_logic.place_order(orderPlacedEvent)
 
     return PlaceOrderResponse(order_id=orderPlacedEvent.order_id)
 
@@ -76,7 +77,7 @@ async def consume_kitchen_order():
 
     logger.info("Consuming kitchen order")
 
-    kitchen_base_event = await service_logic.consume_kitchen_order()
+    kitchen_base_event = await waitress_service_logic.consume_kitchen_order()
 
     if kitchen_base_event:
         if isinstance(kitchen_base_event, OrderReady):
@@ -91,4 +92,16 @@ async def consume_kitchen_order():
         logger.warning("No new kitchen orders to consume")
         raise HTTPException(status_code=404, detail="No new kitchen orders")
 
+@app.get("/order/{order_id}/status", response_model=OrderStatusResponse, status_code=status.HTTP_200_OK)
+async def check_if_order_ready(order_id: int) -> OrderStatusResponse:
+    logger.info("Checking if order is ready", order_id=order_id)
+    response = await waitress_service_logic.isOrderReady(order_id)
+    logger.info("Order is ready", isReady = response.is_ready)
+    return response
+
+# Basic health check endpoint
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check():
+    logger.info("Health check endpoint called")
+    return {"status": "OK"}
 
