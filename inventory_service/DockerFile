@@ -1,12 +1,14 @@
-# Inventory/Dockerfile
+# inventory_service/Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install shared package first
+# Copy pyproject.toml AND kitchen_commons directory
+COPY pyproject.toml /tmp/
 COPY kitchen_commons/ /tmp/kitchen_commons/
-RUN pip install --no-cache-dir /tmp/kitchen_commons && \
-    rm -rf /tmp/kitchen_commons
+
+# Install shared package
+RUN cd /tmp && pip install --no-cache-dir . && rm -rf /tmp/kitchen_commons /tmp/pyproject.toml
 
 # Install service dependencies
 COPY inventory_service/requirements.txt ./requirements.txt
