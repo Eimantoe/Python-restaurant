@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import Dict, List
 import uuid
 
 # This model is used to check if a recipe can be made with the available ingredients
@@ -63,3 +63,9 @@ class MenuItem(BaseModel):
 
 class Menu(BaseModel):
     items: list[MenuItem]
+
+class AddSupplyRequest(BaseModel):
+    supplies: Dict[str, int]  # Dictionary of supply name to quantity
+
+class AddSupplyResponse(BaseModel):
+    results: Dict[str, str]  # Dictionary of supply name to success status

@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
+from os import name
 from fastapi import FastAPI, status, HTTPException
 
 from middleware.CorrelationMiddleware import correlation_middleware
 from .InventoryServiceLogic import InventoryServiceLogic
-from kitchen_commons.models.InventoryServiceModel import CheckRecipeForIngredientsRequest, CheckRecipeForIngredientsResponse, ConsumeIngridientsRequest, ConsumeIngridientsResponse, ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, Menu
+from kitchen_commons.models.InventoryServiceModel import AddSupplyRequest, AddSupplyResponse, CheckRecipeForIngredientsRequest, CheckRecipeForIngredientsResponse, ConsumeIngridientsRequest, ConsumeIngridientsResponse, ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, Menu
 from kitchen_commons.shared.Logging import logger
 from kitchen_commons.shared.Lifecycle import startup_http_client, shutdown_http_client, startup_redis, shutdown_redis
 from kitchen_commons.shared.RedisService import redis_service
@@ -62,6 +63,24 @@ async def consume_recipe_ingredients(request: ConsumeRecipeIngridientsRequest):
         return ConsumeRecipeIngridientsResponse(user_id=request.user_id, results=resultList)
     except Exception as e:
         logger.error("Error in consume_recipe_ingredients", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/add-supply", status_code=status.HTTP_201_CREATED, response_model=AddSupplyResponse)
+async def add_supply(request: AddSupplyRequest):
+    try:
+        logger.info("add_supply called", request=request)
+
+        results = {}
+
+        for name, qty in request.supplies.items():
+            rows_affected = await inventory_service.add_supply(name, qty)
+            results[name] = f"supplies have been added: {rows_affected}"
+
+        logger.info("add_supply completed", results=results)
+        
+        return AddSupplyResponse(results=results)
+    except Exception as e:
+        logger.error("Error in add_supply", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/menu", response_model=Menu, status_code=status.HTTP_200_OK)

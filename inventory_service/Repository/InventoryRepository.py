@@ -160,3 +160,18 @@ class InventoryRepository:
             # If all ingredients are consumed successfully, commit the transaction
             await conn.commit()
             return (True, "Ingredients consumed successfully")
+        
+    async def add_supply(self, name: str, qty: int) -> bool:
+        """Asynchronously adds a new supply item to the supplies table."""
+        async with self.get_connection() as conn:
+            await conn.execute("UPDATE supplies SET qty = qty + ? WHERE name = ?", (qty, name))
+            await conn.commit()
+
+            rows_affected = conn.total_changes
+
+            logger.info("Supply added to database", name=name, qty=qty, rows_affected=rows_affected)
+
+            if rows_affected > 0:
+                return True
+            else:
+                return False

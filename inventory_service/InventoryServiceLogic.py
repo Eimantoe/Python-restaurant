@@ -94,4 +94,14 @@ class InventoryServiceLogic:
         menu = Menu(items=[MenuItem(name=item.get("name"), description=item.get("description")) for item in menu_result]) # type: ignore
 
         return menu
+    
+    async def add_supply(self, name: str, qty: int) -> bool:
+
+        logger.info("add_supply called", name=name, qty=qty)
+
+        success = await self.inventory_repository.add_supply(name, qty)
+
+        logger.info("add_supply result", name=name, qty=qty, success=success)
+
+        return success
 
