@@ -4,7 +4,7 @@ import traceback
 import redis
 
 from kitchen_commons.events.Events import DeadEvent, OrderCanceled, OrderPlaced, OrderReady
-from kitchen_commons.models.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask
+from kitchen_commons.models.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsResult, ConsumeRecipeIngridientsTask
 
 from kitchen_commons.shared.Correlation import generate_correlation_id, set_correlation_id
 from kitchen_commons.shared.RedisService import redis_service
@@ -137,7 +137,10 @@ class KitchenServiceLogic:
             await redis_service.publish_kitchen_order_event(orderCanceled.to_redis()) # type: ignore
             return
 
-        result = await self.consume_recipe_ingredients(consumeTasksRequestList)
+        if settings.use_grpc:
+            result = await self._consume_recipe_ingredients_rpc(consumeTasksRequestList)
+        else:
+            result = await self._consume_recipe_ingredients(consumeTasksRequestList)
 
         order_consumption_comments = [f"{consumptionResult.recipe_name}: {'Success' if consumptionResult.consumed else 'Failed'} - {consumptionResult.comments}" for consumptionResult in result.results]
 
@@ -156,7 +159,7 @@ class KitchenServiceLogic:
         logger.info("Processing order canceled event", order_id=event.order_id, table_no=event.table_no)
 
     # Call Inventory Service to consume recipe ingredients
-    async def consume_recipe_ingredients(self, request: ConsumeRecipeIngridientsRequest) -> ConsumeRecipeIngridientsResponse:
+    async def _consume_recipe_ingredients(self, request: ConsumeRecipeIngridientsRequest) -> ConsumeRecipeIngridientsResponse:
 
         logger.info("CONSUME_RECIPE_INGREDIENTS called", user_id=request.user_id, tasks=len(request.tasks))
 
@@ -170,4 +173,34 @@ class KitchenServiceLogic:
             logger.error("/consumeRecipeIngridients failed after retries", user_id=request.user_id, tasks=len(request.tasks))
             raise Exception("Failed to consume recipe ingredients from Inventory Service")
         
-        return result           
+        return result        
+
+    async def _consume_recipe_ingredients_rpc(self, request: ConsumeRecipeIngridientsRequest) -> ConsumeRecipeIngridientsResponse:
+        logger.info("CONSUME_RECIPE_INGREDIENTS_RPC called", number_of_tasks=len(request.tasks), tasks = request.tasks)
+
+        from inventory_service.gRPC.InventoryServicer import InventoryServicer
+        from kitchen_commons.proto.generated.inventoryservice_pb2 import ConsumeRecipeIngredientsRequest, ConsumeRecipeIngredientsResponse
+
+        # convert model request to proto request
+        protoTaskList = []
+
+        for task in request.tasks:
+            protoTask = ConsumeRecipeIngredientsRequest.ConsumeRecipeIngredientsTask(
+                recipe_name=task.recipe_name,
+                qty=task.qty
+            )
+            protoTaskList.append(protoTask)
+            
+        protoRequest = ConsumeRecipeIngredientsRequest(
+            ConsumeRecipeIngredientsTasks=protoTaskList
+        )
+
+        inventoryServicer = InventoryServicer()
+        consumeRecipeIngredientsResponse = inventoryServicer.ConsumeRecipeIngredients(protoRequest)
+
+        consumeRecipeIngredientsResponseModel = ConsumeRecipeIngridientsResponse()
+        consumeRecipeIngredientsResponseModel.results = [ConsumeRecipeIngridientsResult(recipe_name=result.recipe_name, consumed=result.consumed, comments=result.comments) for result in consumeRecipeIngredientsResponse.ConsumeRecipeIngredientsResults] 
+
+        logger.info("/consumeRecipeIngridients RPC result", number_of_tasks = len(request.tasks), result=consumeRecipeIngredientsResponseModel)
+
+        return consumeRecipeIngredientsResponseModel

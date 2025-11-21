@@ -1,11 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Dict, List
-import uuid
 
 # This model is used to check if a recipe can be made with the available ingredients
 class CheckRecipeForIngredientsTask(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    type: str = "check_recipe_for_ingredients"
     recipe_name: str
     qty: int
 
@@ -13,7 +10,6 @@ class CheckRecipeForIngredientsRequest(BaseModel):
     recipe_ids: List[CheckRecipeForIngredientsTask]
 
 class CheckRecipeForIngredientsResult(BaseModel):
-    id: str
     recipe_id: str
     can_make: bool
 
@@ -22,8 +18,6 @@ class CheckRecipeForIngredientsResponse(BaseModel):
 
 # This model is used to consume ingredients from the inventory
 class ConsumeIngridientsTask(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    type: str = "consume_ingridients"
     ingridient_name: str
     qty: int
 
@@ -31,7 +25,6 @@ class ConsumeIngridientsRequest(BaseModel):
     tasks: List[ConsumeIngridientsTask]
 
 class ConsumeIngridientsResult(BaseModel):
-    id: str
     ingridient_name: str
     consumed: bool
 
@@ -40,8 +33,6 @@ class ConsumeIngridientsResponse(BaseModel):
 
 # This model is used to consume ingredients for a recipe
 class ConsumeRecipeIngridientsTask(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    type: str = "consume_recipe_ingridients"
     recipe_name: str
     qty: int
 
@@ -49,7 +40,6 @@ class ConsumeRecipeIngridientsRequest(BaseModel):
     tasks: List[ConsumeRecipeIngridientsTask]
 
 class ConsumeRecipeIngridientsResult(BaseModel):
-    id: str
     recipe_name: str
     consumed: bool
     comments: str = ""

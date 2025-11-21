@@ -10,8 +10,9 @@ class Settings(BaseSettings): # type: ignore
 
     waitress_service_url    : str = "http://localhost:6000"
 
-
     kitchen_service_url     : str = "http://localhost:7001"
+
+    use_grpc: bool = True
 
     redis_host: str = "localhost"
     redis_port: int = 6379

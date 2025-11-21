@@ -19,4 +19,5 @@ build/
 .idea/
 *.swp
 *.rdb
+kitchen_commons/proto/generated/
 dump.rdb

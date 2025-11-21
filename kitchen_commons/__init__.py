@@ -47,6 +47,8 @@ from kitchen_commons.shared.Lifecycle import (
     shutdown_redis
 )
 
+from kitchen_commons.proto.generated.inventoryservice_pb2_grpc import InventoryServiceServicer
+
 __all__ = [
     "__version__",
     "DeadEvent",
@@ -79,5 +81,6 @@ __all__ = [
     "startup_http_client",
     "shutdown_http_client",
     "startup_redis",
-    "shutdown_redis"
+    "shutdown_redis",
+    "InventoryServiceServicer"
 ]
