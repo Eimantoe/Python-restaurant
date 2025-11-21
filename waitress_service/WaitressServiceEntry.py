@@ -7,12 +7,9 @@ from kitchen_commons.shared.Settings import settings
 from kitchen_commons.shared.Logging import logger
 from kitchen_commons.shared.Lifecycle import startup_http_client, startup_redis, shutdown_redis, shutdown_http_client
 from kitchen_commons.shared.RedisService import redis_service   
-#import os
-#import sys
-
-#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from kitchen_commons.shared.Correlation import generate_correlation_id, set_correlation_id, get_correlation_id
 from fastapi import FastAPI, HTTPException, status
+from middleware.CorrelationMiddleware import correlation_middleware
 from waitress_service.WaitressServiceLogic import WaitressServiceLogic
 
 waitress_service_logic = WaitressServiceLogic()
@@ -39,6 +36,7 @@ async def lifespan(app: FastAPI):
     logger.info("########################################################################")
 
 app = FastAPI(title="Waitress service", lifespan=lifespan)
+app.middleware('http')(correlation_middleware)
 
 @app.get("/menu", response_model=Menu, status_code=status.HTTP_200_OK)
 async def show_menu():
@@ -66,7 +64,13 @@ async def show_menu():
 async def place_order(orders: PlaceOrderRequest):
     logger.info("Order placed", orders=orders)
 
-    orderPlacedEvent = OrderPlaced(comments=orders.comments, table_no=orders.table_no, order_id= await redis_service.generate_new_id("event_id_counter"), items=[item for item in orders.items])
+    orderPlacedEvent = OrderPlaced(
+                            comments=orders.comments, 
+                            table_no=orders.table_no, 
+                            order_id= await redis_service.generate_new_id("event_id_counter"), 
+                            items=[item for item in orders.items],
+                            correlation_id=get_correlation_id()
+                            )
 
     await waitress_service_logic.place_order(orderPlacedEvent)
 

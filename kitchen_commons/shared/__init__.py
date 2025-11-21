@@ -9,6 +9,13 @@ from kitchen_commons.shared.Lifecycle import (
     startup_redis,
     shutdown_redis
 )
+from kitchen_commons.shared.Correlation import (
+    generate_correlation_id,
+    get_correlation_id,
+    set_correlation_id
+)
+
+
 
 __all__ = [
     "APIRequest",
@@ -19,5 +26,8 @@ __all__ = [
     "startup_http_client",
     "shutdown_http_client",
     "startup_redis",
-    "shutdown_redis"
+    "shutdown_redis",
+    "generate_correlation_id",
+    "get_correlation_id",
+    "set_correlation_id"
 ]

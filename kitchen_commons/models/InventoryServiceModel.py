@@ -10,7 +10,6 @@ class CheckRecipeForIngredientsTask(BaseModel):
     qty: int
 
 class CheckRecipeForIngredientsRequest(BaseModel):
-    user_id: str
     recipe_ids: List[CheckRecipeForIngredientsTask]
 
 class CheckRecipeForIngredientsResult(BaseModel):
@@ -19,9 +18,7 @@ class CheckRecipeForIngredientsResult(BaseModel):
     can_make: bool
 
 class CheckRecipeForIngredientsResponse(BaseModel):
-    user_id: str
     results: List[CheckRecipeForIngredientsResult]
-
 
 # This model is used to consume ingredients from the inventory
 class ConsumeIngridientsTask(BaseModel):
@@ -31,7 +28,6 @@ class ConsumeIngridientsTask(BaseModel):
     qty: int
 
 class ConsumeIngridientsRequest(BaseModel):
-    user_id: str
     tasks: List[ConsumeIngridientsTask]
 
 class ConsumeIngridientsResult(BaseModel):
@@ -40,7 +36,6 @@ class ConsumeIngridientsResult(BaseModel):
     consumed: bool
 
 class ConsumeIngridientsResponse(BaseModel):
-    user_id: str
     results: List[ConsumeIngridientsResult]
 
 # This model is used to consume ingredients for a recipe
@@ -51,7 +46,6 @@ class ConsumeRecipeIngridientsTask(BaseModel):
     qty: int
 
 class ConsumeRecipeIngridientsRequest(BaseModel):
-    user_id: str
     tasks: List[ConsumeRecipeIngridientsTask]
 
 class ConsumeRecipeIngridientsResult(BaseModel):
@@ -61,7 +55,6 @@ class ConsumeRecipeIngridientsResult(BaseModel):
     comments: str = ""
 
 class ConsumeRecipeIngridientsResponse(BaseModel):
-    user_id: str
     results: List[ConsumeRecipeIngridientsResult]
 
 class MenuItem(BaseModel):

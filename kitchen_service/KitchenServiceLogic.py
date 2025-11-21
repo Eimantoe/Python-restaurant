@@ -6,6 +6,7 @@ import redis
 from kitchen_commons.events.Events import DeadEvent, OrderCanceled, OrderPlaced, OrderReady
 from kitchen_commons.models.InventoryServiceModel import ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, ConsumeRecipeIngridientsTask
 
+from kitchen_commons.shared.Correlation import generate_correlation_id, set_correlation_id
 from kitchen_commons.shared.RedisService import redis_service
 from kitchen_commons.shared.Settings import settings
 from kitchen_commons.shared.Logging import logger
@@ -33,12 +34,20 @@ class KitchenServiceLogic:
     async def consume_waitress_order_events(self):
         while True:
             try:
-                message_id, message_data = await redis_service.consume_waitress_order_event(self.last_waitress_message_id) or (None, None)
-                
+                message_id, message_data = await redis_service.consume_waitress_order_event(self.last_waitress_message_id) or (None, None) 
+
                 # If no order's, why bother?
                 if message_id is None or message_data is None:
                     await asyncio.sleep(5)
                     continue
+
+                corr_id = message_data.get('correlation_id')
+                if corr_id and corr_id != "":
+                    set_correlation_id(corr_id)
+                else:
+                    # Generate new one if missing
+                    set_correlation_id(generate_correlation_id())
+
 
                 # We've got something here to process
                 logger.info("Consumed waitress order event", message_id=message_id, message_data=message_data)

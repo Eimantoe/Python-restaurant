@@ -1,13 +1,7 @@
-import asyncio
 from contextlib import asynccontextmanager
-import sys
-import os
-
-#from kitchen_service.KitchenServiceLogic import KitchenServiceLogic
-
-#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from fastapi import FastAPI, status, HTTPException
+
+from middleware.CorrelationMiddleware import correlation_middleware
 from .InventoryServiceLogic import InventoryServiceLogic
 from kitchen_commons.models.InventoryServiceModel import CheckRecipeForIngredientsRequest, CheckRecipeForIngredientsResponse, ConsumeIngridientsRequest, ConsumeIngridientsResponse, ConsumeRecipeIngridientsRequest, ConsumeRecipeIngridientsResponse, Menu
 from kitchen_commons.shared.Logging import logger
@@ -38,7 +32,7 @@ async def lifespan(app: FastAPI):
     logger.info("########################################################################")
 
 app = FastAPI(title="Kitchen inventory service", lifespan=lifespan)
-
+app.middleware('http')(correlation_middleware)
 
 @app.post("/checkRecipeForIngredients", response_model=CheckRecipeForIngredientsResponse, status_code=status.HTTP_200_OK)
 async def check_recipe_for_ingredients(request: CheckRecipeForIngredientsRequest):
@@ -107,6 +101,10 @@ async def cache_status():
             "exists": False
         }
     
-
+# Basic health check endpoint
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check():
+    logger.info("Health check endpoint called")
+    return {"status": "OK"}
 
         

@@ -2,19 +2,24 @@ import logging
 import sys
 import structlog
 from kitchen_commons.shared.Settings import settings
+from .Correlation import get_correlation_id
 
 def configure_logging(is_dev_mode=True):
-    """
-    Configures logging for the application.
-    In development mode, logs are human-readable and colored.
-    In production mode, logs are JSON-formatted.
-    """
+
+    # Custom processor to add correlation ID to log entries
+    def add_correlation_id(logger, method_name, event_dict):
+        corr_id = get_correlation_id()
+        if corr_id:
+            event_dict['correlation_id'] = corr_id
+        return event_dict
+
     # 1. Define the processor chain
     shared_processors = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
+        add_correlation_id,
     ]
 
     if is_dev_mode:

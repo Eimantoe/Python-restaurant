@@ -2,15 +2,20 @@ import json
 
 from typing_extensions import Literal
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class BaseEvent(BaseModel):
 
     order_id: int
     table_no: int
     comments: str
+    correlation_id: Optional[str] = None  
 
     def to_redis(self) -> dict[str, str]:
+        if not self.correlation_id:
+            from kitchen_commons.shared.Correlation import get_correlation_id
+            self.correlation_id = get_correlation_id()
+
         data = self.model_dump()
         redis_data = {}
 

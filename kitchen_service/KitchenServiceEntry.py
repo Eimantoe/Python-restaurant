@@ -39,3 +39,9 @@ async def lifespan(app: FastAPI):
     logger.info("########################################################################")
 
 app = FastAPI(title="Kitchen service", lifespan=lifespan)
+
+# Basic health check endpoint
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check():
+    logger.info("Health check endpoint called")
+    return {"status": "OK"}

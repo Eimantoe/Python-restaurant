@@ -1,6 +1,7 @@
 import asyncio
 from enum import Enum
 from typing import Any
+from kitchen_commons.shared.Correlation import get_correlation_id
 from kitchen_commons.shared.Logging import logger
 from kitchen_commons.shared.HTTPClientManager import http_client_manager
 import httpx
@@ -37,6 +38,11 @@ class APIRequest:
     async def sendRequest(self) -> httpx.Response:
 
         logger.info("Sending API request", method=self.method, url=self.url, payload=self.payload)
+
+        headers = {}
+        corr_id = get_correlation_id()
+        if corr_id:
+            headers['X-Correlation-ID'] = corr_id
 
         client = http_client_manager.client
     
